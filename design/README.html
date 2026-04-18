@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Amőba — Claude Code Handoff</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Caveat:wght@400;600;700&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'JetBrains Mono', ui-monospace, monospace; background: #fbfcfb; color: #1a1a1a; max-width: 880px; margin: 0 auto; padding: 48px 32px 120px; line-height: 1.6; font-size: 13px; }
+  h1 { font-family: 'Caveat', cursive; font-size: 64px; margin: 0; line-height: 1; }
+  h1 + .sub { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; margin-top: 4px; }
+  h2 { font-size: 14px; letter-spacing: 0.15em; text-transform: uppercase; margin-top: 56px; padding-bottom: 8px; border-bottom: 1px solid rgba(0,0,0,0.12); }
+  h3 { font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 28px; opacity: 0.75; }
+  pre { background: #f4f6f8; border: 1px solid #e3e7eb; border-radius: 6px; padding: 14px 16px; overflow-x: auto; font-size: 12px; line-height: 1.55; }
+  code.inline { background: #f4f6f8; padding: 1px 6px; border-radius: 3px; font-size: 12px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12px; margin: 12px 0; }
+  th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e3e7eb; }
+  th { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.6; font-weight: 500; }
+  .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12); vertical-align: -2px; margin-right: 6px; }
+  .tag { display: inline-block; background: #1e4a8f; color: #fff; font-size: 10px; letter-spacing: 0.1em; padding: 2px 8px; border-radius: 3px; }
+  .note { border-left: 2px solid #1e4a8f; padding: 8px 14px; background: #f4f7fb; font-size: 12px; margin: 16px 0; }
+  ul { padding-left: 22px; } li { margin-bottom: 4px; }
+  a { color: #1e4a8f; }
+</style>
+</head>
+<body>
+
+<h1>Amőba — Handoff</h1>
+<div class="sub">React + TypeScript + Rough.js · for Claude Code</div>
+
+<div class="note"><strong>Goal.</strong> Rebuild the prototype (<code class="inline">../Amőba.html</code>) as React 18 + TS using Rough.js for all hand-drawn strokes. Open the prototype alongside this doc — it's the source of truth.</div>
+
+<h2>1 · Setup</h2>
+<pre>pnpm create vite@latest amoba -- --template react-ts
+cd amoba
+pnpm add roughjs
+pnpm add -D @types/roughjs</pre>
+<pre>&lt;link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"&gt;</pre>
+
+<h2>2 · Design Tokens</h2>
+
+<table>
+  <tr><th>Key</th><th>Name</th><th>Paper</th><th>Grid</th><th>X</th><th>O</th><th>Win loop</th></tr>
+  <tr><td>a</td><td>Graphite on cream</td><td><span class="swatch" style="background:#f4eedb"></span>#f4eedb</td><td><span class="swatch" style="background:#c9b492"></span>#c9b492</td><td><span class="swatch" style="background:#2a2420"></span>#2a2420</td><td><span class="swatch" style="background:#2a2420"></span>#2a2420</td><td><span class="swatch" style="background:#b33a2a"></span>#b33a2a</td></tr>
+  <tr><td><strong>b</strong> <span class="tag">chosen</span></td><td>Blue ballpoint on white</td><td><span class="swatch" style="background:#fbfcfb"></span>#fbfcfb</td><td><span class="swatch" style="background:#b9c7d6"></span>#b9c7d6</td><td><span class="swatch" style="background:#1e4a8f"></span>#1e4a8f</td><td><span class="swatch" style="background:#1e4a8f"></span>#1e4a8f</td><td><span class="swatch" style="background:#c23a2a"></span>#c23a2a</td></tr>
+  <tr><td>c</td><td>Two-colour pencil</td><td><span class="swatch" style="background:#f4eedb"></span>#f4eedb</td><td><span class="swatch" style="background:#c9b492"></span>#c9b492</td><td><span class="swatch" style="background:#b52a2a"></span>#b52a2a</td><td><span class="swatch" style="background:#2a4a8f"></span>#2a4a8f</td><td><span class="swatch" style="background:#b52a2a"></span>#b52a2a</td></tr>
+</table>
+
+<pre>export type AestheticKey = 'a' | 'b' | 'c';
+
+export interface Aesthetic {
+  key: AestheticKey;
+  name: string;
+  paper: string;
+  grid: string;
+  gridOpacity: number;
+  x: string; o: string;
+  ui: string; muted: string;
+  winLoop: string; winStrike: string;
+}
+
+export const AESTHETICS: Record&lt;AestheticKey, Aesthetic&gt; = {
+  a: { key:'a', name:'Graphite on cream', paper:'#f4eedb', grid:'#c9b492',
+       gridOpacity:0.70, x:'#2a2420', o:'#2a2420', ui:'#2a2420',
+       muted:'rgba(42,36,32,0.55)', winLoop:'#b33a2a', winStrike:'#2a2420' },
+  b: { key:'b', name:'Blue ballpoint on white', paper:'#fbfcfb', grid:'#b9c7d6',
+       gridOpacity:0.85, x:'#1e4a8f', o:'#1e4a8f', ui:'#1e4a8f',
+       muted:'rgba(30,74,143,0.55)', winLoop:'#c23a2a', winStrike:'#1e4a8f' },
+  c: { key:'c', name:'Two-colour pencil', paper:'#f4eedb', grid:'#c9b492',
+       gridOpacity:0.70, x:'#b52a2a', o:'#2a4a8f', ui:'#2a2420',
+       muted:'rgba(42,36,32,0.55)', winLoop:'#b52a2a', winStrike:'#2a2420' },
+};
+
+export const TIMINGS = {
+  markDrawMs: 220,
+  markStaggerMs: 100,
+  aiDelayMs: { easy:[350,650], medium:[500,900], hard:[700,1200] },
+  winDrawMs: 900,
+} as const;
+
+export const STROKE = { mark: 2.1, win: 2.6, grid: 0.7, border: 1.2 } as const;
+export const BOARD = { target: 600, cellPx: (n: number) =&gt; Math.floor(600/n), pad: 28 } as const;
+export const GRID_SIZES = [13, 15, 19] as const;
+export type GridSize = typeof GRID_SIZES[number];</pre>
+
+<h2>3 · Rough.js Config per Mark</h2>
+
+<pre>import rough from 'roughjs';
+const gen = rough.generator();
+
+export const seedFor = (r: number, c: number, salt = 0) =&gt;
+  ((r*73856093) ^ (c*19349663) ^ (salt*83492791)) &gt;&gt;&gt; 0;
+
+const markOpts = (color: string, r01: number, seed: number) =&gt; ({
+  stroke: color, strokeWidth: 2.1,
+  roughness: 0.6 + r01 * 2.4,   // 0.6..3.0
+  bowing:    1.0 + r01 * 2.0,   // 1.0..3.0
+  seed,
+});
+
+// X: two diagonal strokes, 22% inner pad
+export function xPaths(cx:number, cy:number, size:number, color:string, r01:number, seed:number) {
+  const pad = size * 0.22;
+  return [
+    ...extract(gen.line(cx-size/2+pad, cy-size/2+pad, cx+size/2-pad, cy+size/2-pad, markOpts(color, r01, seed))),
+    ...extract(gen.line(cx+size/2-pad, cy-size/2+pad, cx-size/2+pad, cy+size/2-pad, markOpts(color, r01, seed+1))),
+  ];
+}
+
+// O: arc -0.2π → 2π-0.1 "almost closed" loop
+export function oPaths(cx:number, cy:number, size:number, color:string, r01:number, seed:number) {
+  const r = size * 0.32;
+  return extract(gen.arc(cx, cy, r*2, r*2, -0.2*Math.PI, 2*Math.PI - 0.1, false, markOpts(color, r01, seed)));
+}
+
+// Win loop: rounded tube around line endpoints
+export function winLoopPaths(points: {x:number;y:number}[], color: string, seed = 29) {
+  const a = points[0], b = points[points.length-1];
+  const len = Math.hypot(b.x-a.x, b.y-a.y) || 1;
+  const ux = (b.x-a.x)/len, uy = (b.y-a.y)/len, nx = -uy, ny = ux;
+  const e = 22;
+  const verts = [
+    [a.x+nx*e-ux*e, a.y+ny*e-uy*e],
+    [b.x+nx*e+ux*e, b.y+ny*e+uy*e],
+    [b.x-nx*e+ux*e, b.y-ny*e+uy*e],
+    [a.x-nx*e-ux*e, a.y-ny*e-uy*e],
+    [a.x+nx*e-ux*e, a.y+ny*e-uy*e],
+  ];
+  return extract(gen.curve(verts, { stroke: color, strokeWidth: 2.6, roughness: 2.0, bowing: 2.5, seed }));
+}
+
+// Win strike: line extended 10px past each endpoint
+export function winStrikePaths(points: {x:number;y:number}[], color: string, seed = 31) {
+  const a = points[0], b = points[points.length-1];
+  const len = Math.hypot(b.x-a.x, b.y-a.y) || 1;
+  const ux = (b.x-a.x)/len, uy = (b.y-a.y)/len;
+  return extract(gen.line(a.x-ux*10, a.y-uy*10, b.x+ux*10, b.y+uy*10,
+    { stroke: color, strokeWidth: 2.2, roughness: 1.6, bowing: 1.5, seed }));
+}
+
+// Grid line: dashed, barely wobbly
+export const gridLineOpts = (color: string) =&gt; ({
+  stroke: color, strokeWidth: 0.7, roughness: 0.6, bowing: 0.8,
+  strokeLineDash: [2, 3] as [number, number],
+});
+
+// Extract path d from Rough drawable so we can animate stroke-dashoffset
+function extract(drawable: ReturnType&lt;typeof gen.line&gt;): { d: string }[] {
+  const out: { d: string }[] = [];
+  for (const set of drawable.sets) {
+    if (set.type !== 'path' &amp;&amp; set.type !== 'fillPath') continue;
+    let d = '';
+    for (const op of set.ops) {
+      if (op.op === 'move')     d += `M${op.data[0]} ${op.data[1]} `;
+      if (op.op === 'lineTo')   d += `L${op.data[0]} ${op.data[1]} `;
+      if (op.op === 'bcurveTo') d += `C${op.data.slice(0,2).join(' ')},${op.data.slice(2,4).join(' ')},${op.data.slice(4,6).join(' ')} `;
+    }
+    out.push({ d: d.trim() });
+  }
+  return out;
+}</pre>
+
+<h2>4 · Component Tree</h2>
+
+<pre>&lt;App&gt;
+├── &lt;Page theme&gt;                    // notebook paper background + shadow
+│   ├── &lt;Board&gt;                     // SVG, computes cellPx from gridSize
+│   │   ├── &lt;PaperDefs&gt;             // turbulence filter + fibre pattern
+│   │   ├── &lt;Grid theme n cellPx&gt;   // dashed wobbly lines (Rough.js)
+│   │   ├── &lt;CoordsAxis&gt; (opt)      // A..O across top, 1..n down side
+│   │   ├── &lt;HoverPreview&gt;          // low-opacity X or O ghost
+│   │   ├── &lt;Marks&gt;                 // all placed X/O paths
+│   │   │   └── &lt;Mark kind pos /&gt;   // animates stroke-dashoffset on mount
+│   │   └── &lt;WinDecoration&gt;         // loop + strike-through, animated
+│   └── &lt;MarginNotes&gt;                // sidebar
+│       ├── &lt;TurnIndicator&gt;
+│       ├── &lt;Score&gt;
+│       ├── &lt;DifficultyPicker&gt;
+│       └── &lt;Actions&gt;                // &lt;RoughButton&gt; New game, Undo
+├── &lt;Tweaks&gt;                        // aesthetic, roughness, size, texture, coords
+└── &lt;WinBanner&gt;</pre>
+
+<p>State lives in <code class="inline">useGame(gridSize)</code> — returns <code class="inline">{ board, turn, moves, lastMove, win, history, place, undo, reset }</code>. Pure reducer; side-effect-free so SSR-safe.</p>
+
+<h2>5 · Interaction Spec</h2>
+
+<table>
+  <tr><th>Event</th><th>Trigger</th><th>Response</th><th>Timing</th></tr>
+  <tr><td>Hover</td><td>pointer over empty cell, X's turn, no win</td><td>Show 28% opacity ghost</td><td>instant</td></tr>
+  <tr><td>Place mark</td><td>click empty cell, X's turn</td><td>Draw-on per stroke; check win</td><td>220ms / stroke, 100ms stagger</td></tr>
+  <tr><td>AI move</td><td>turn flips to O</td><td>Heuristic picks; animate draw-on</td><td>350–1200ms delay by difficulty</td></tr>
+  <tr><td>Win</td><td>checkWinAt returns line</td><td>Strike first, loop second; lock board; banner fades in</td><td>strike 0–900ms, loop 200–1100ms</td></tr>
+  <tr><td>New game</td><td>button</td><td>Clear board; keep score</td><td>instant</td></tr>
+  <tr><td>Undo</td><td>button</td><td>Pop last 2 moves (player + AI)</td><td>instant</td></tr>
+  <tr><td>Grid size</td><td>Tweaks segmented control</td><td>Reset board; keep score</td><td>instant</td></tr>
+</table>
+
+<h3>Animation technique</h3>
+<pre>const len = el.getTotalLength();
+el.style.strokeDasharray  = `${len}`;
+el.style.strokeDashoffset = `${len}`;
+el.style.transition = `stroke-dashoffset ${DRAW_MS}ms cubic-bezier(.55,.2,.3,1) ${i*STAGGER}ms`;
+requestAnimationFrame(() =&gt; requestAnimationFrame(() =&gt; {
+  el.style.strokeDashoffset = '0';
+}));</pre>
+
+<h3>Reduced motion</h3>
+<p><code class="inline">@media (prefers-reduced-motion: reduce)</code> — skip draw-on; mark appears in final state. Banner fade-in disabled.</p>
+
+<h2>6 · Heuristic Opponent</h2>
+
+<p>For each empty cell within a 5×5 window of any existing mark, compute score for both "offence" (own chains, 1.0×) and "defence" (opponent chains, 0.9×), pick max.</p>
+
+<pre>// Per direction from candidate cell:
+// count = run length if placed there (counting own chain both sides)
+// opens = 0..2 (how many endpoints are still empty)
+5 in a row           → 100000
+4, both open         → 10000
+4, one open          → 1000
+3, both open         → 500
+3, one open          → 80
+2, both open         → 40
+2, one open          → 8
+else                 → 1</pre>
+
+<p>Sum across 4 directions, add small random tiebreaker, pick best. Difficulty scales delay only. For "easy", consider weakening defence multiplier to ~0.4.</p>
+
+<h2>7 · Accessibility</h2>
+<ul>
+  <li><strong>Keyboard nav.</strong> Arrow keys move focus ring; Enter / Space places.</li>
+  <li><strong>Screen reader.</strong> <code class="inline">aria-live="polite"</code>: "X placed at D7, your turn".</li>
+  <li><strong>Color.</strong> X / O differ by shape, not colour — supports colourblind users in (c).</li>
+  <li><strong>Reduced motion.</strong> Honour <code class="inline">prefers-reduced-motion</code>.</li>
+  <li><strong>Contrast.</strong> In (b), 1e4a8f on fbfcfb is 7.1:1 — AAA.</li>
+</ul>
+
+<h2>8 · Files to create</h2>
+<pre>src/
+  main.tsx
+  App.tsx
+  tokens.ts                 // § 2
+  roughPaths.ts             // § 3
+  game/
+    useGame.ts              // reducer + hook
+    checkWin.ts             // pure
+    aiMove.ts               // § 6, pure
+  components/
+    Board.tsx
+    Grid.tsx
+    Mark.tsx
+    PaperDefs.tsx
+    WinDecoration.tsx
+    MarginNotes.tsx
+    TurnIndicator.tsx
+    DifficultyPicker.tsx
+    RoughButton.tsx
+    Tweaks.tsx
+    WinBanner.tsx
+  styles.css
+index.html</pre>
+
+<h2>9 · Open questions</h2>
+<ul>
+  <li>Persist aesthetic + grid-size to localStorage?</li>
+  <li>Two-human local multiplayer mode?</li>
+  <li>Copy is bilingual (HU + EN) — keep, or pick one?</li>
+</ul>
+
+<p style="margin-top:56px; opacity:0.45; font-size:11px;">Built from <code class="inline">Amőba.html</code> · April 2026</p>
+
+</body>
+</html>

@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Amőba — Five in a Row</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.min.js"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  :root { --ink: #1a1a1a; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    color: var(--ink);
+    background: #edeef0;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .app { min-height: 100vh; display: grid; place-items: center; padding: 32px 24px; }
+  .hand { font-family: 'Caveat', cursive; }
+  .page {
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), 0 18px 40px -12px rgba(0,0,0,0.18);
+    transition: background-color .35s ease;
+  }
+  .page::before {
+    content: ""; position: absolute; inset: 0 0 auto 0; height: 8px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.04), transparent);
+    pointer-events: none; border-radius: 4px 4px 0 0;
+  }
+  .page-inner { display: grid; grid-template-columns: 1fr 240px; gap: 28px; padding: 28px 32px 32px 32px; }
+  @media (max-width: 980px) { .page-inner { grid-template-columns: 1fr; } }
+  .board-wrap { position: relative; user-select: none; touch-action: manipulation; }
+  .board-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+  .margin { display: flex; flex-direction: column; gap: 18px; padding-top: 6px; }
+  .margin h1 { margin: 0; font-family: 'Caveat', cursive; font-weight: 700; font-size: 42px; line-height: 1; }
+  .margin .sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 4px; opacity: 0.55; }
+  .note-block { padding: 10px 0; border-top: 1px dashed rgba(0,0,0,0.15); }
+  .note-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; margin-bottom: 6px; }
+  .turn-row { display: flex; align-items: center; gap: 14px; }
+  .turn-chip { width: 42px; height: 42px; display: grid; place-items: center; }
+  .turn-text { font-family: 'Caveat', cursive; font-size: 26px; line-height: 1; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat .n { font-size: 22px; font-weight: 600; }
+  .stat .l { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
+  .pbtn { position: relative; background: transparent; border: 0; padding: 8px 14px 10px; font-family: 'Caveat', cursive; font-size: 20px; color: inherit; cursor: pointer; line-height: 1; }
+  .pbtn svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .pbtn span { position: relative; }
+  .pbtn:hover { transform: translateY(-1px); }
+  .diff-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .diff { font-family: 'Caveat', cursive; font-size: 20px; padding: 4px 10px; border: 0; background: transparent; cursor: pointer; color: inherit; opacity: 0.55; line-height: 1; position: relative; }
+  .diff.active { opacity: 1; }
+  .diff.active::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 2px; height: 2px; background: currentColor; border-radius: 2px; opacity: 0.6; }
+  .footer-note { font-size: 10px; opacity: 0.45; letter-spacing: 0.1em; }
+  .tweaks { position: fixed; right: 18px; bottom: 18px; width: 300px; background: rgba(255,255,255,0.96); backdrop-filter: blur(6px); border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 14px 16px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; box-shadow: 0 10px 30px rgba(0,0,0,0.12); z-index: 20; display: none; }
+  .tweaks.show { display: block; }
+  .tweaks h3 { margin: 0 0 10px 0; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.6; font-weight: 500; }
+  .tw-row { margin-bottom: 12px; }
+  .tw-row:last-child { margin-bottom: 0; }
+  .tw-label { display: block; font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.6; margin-bottom: 6px; }
+  .tw-seg { display: flex; border: 1px solid rgba(0,0,0,0.15); border-radius: 6px; overflow: hidden; }
+  .tw-seg button { flex: 1; background: transparent; border: 0; padding: 6px 4px; font-family: inherit; font-size: 11px; cursor: pointer; color: inherit; border-right: 1px solid rgba(0,0,0,0.1); }
+  .tw-seg button:last-child { border-right: 0; }
+  .tw-seg button.active { background: #1a1a1a; color: #fff; }
+  .tw-seg .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; border: 1px solid rgba(0,0,0,0.15); }
+  .tw-check { display: flex; align-items: center; gap: 8px; font-size: 11px; cursor: pointer; }
+  .tw-slider { width: 100%; }
+  .tw-val { font-size: 10px; opacity: 0.6; margin-left: 6px; }
+  .banner { position: absolute; top: -14px; left: 50%; transform: translateX(-50%) rotate(-2deg); background: #fff8c8; padding: 6px 14px 8px; font-family: 'Caveat', cursive; font-size: 22px; line-height: 1; box-shadow: 0 6px 16px rgba(0,0,0,0.12); z-index: 5; pointer-events: none; opacity: 0; transition: opacity .4s ease; }
+  .banner.show { opacity: 1; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .app { animation: fadeIn .5s ease; }
+  @media (prefers-reduced-motion: reduce) { .app, .banner { animation: none; transition: none; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+try {
+const { useState, useEffect, useRef, useCallback, useLayoutEffect } = React;
+
+const TWEAK_DEFAULS = /*EDITMODE-BEGIN*/{
+  "aesthetic": "b",
+  "roughness": 15,
+  "gridSize": 15,
+  "paperTexture": true,
+  "showCoords": false
+}/*EDITMODE-END*/;
+
+const AESTHETICS = {
+  a: { name:"Graphite on cream", paper:"#f4eedb", grid:"#c9b492", gridOpacity:0.7, x:"#2a2420", o:"#2a2420", ui:"#2a2420", muted:"rgba(42,36,32,0.55)", winLoop:"#b33a2a", winStrike:"#2a2420", inkName:"Pencil" },
+  b: { name:"Blue ballpoint on white", paper:"#fbfcfb", grid:"#b9c7d6", gridOpacity:0.85, x:"#1e4a8f", o:"#1e4a8f", ui:"#1e4a8f", muted:"rgba(30,74,143,0.55)", winLoop:"#c23a2a", winStrike:"#1e4a8f", inkName:"Ballpoint" },
+  c: { name:"Two-colour pencil", paper:"#f4eedb", grid:"#c9b492", gridOpacity:0.7, x:"#b52a2a", o:"#2a4a8f", ui:"#2a2420", muted:"rgba(42,36,32,0.55)", winLoop:"#b52a2a", winStrike:"#2a2420", inkName:"Color pencil" }
+};
+const BOARD_TARGET = 600;
+const cellForSize = n => Math.floor(BOARD_TARGET / n);
+const DRAW_MS = 220;
+const WIN_DRAW_MS = 900;
+
+const seedFor = (r,c,s=0) => ((r*73856093)^(c*19349663)^(s*83492791))>>>0;
+
+let _gen = null;
+const gen = () => (_gen ||= rough.generator());
+
+function markOpts(color, r01, seed) {
+  return { stroke: color, strokeWidth: 2.1, roughness: 0.6 + r01*2.4, bowing: 1 + r01*2.0, seed: seed||1 };
+}
+
+function extract(drawable) {
+  const out = [];
+  for (const set of drawable.sets) {
+    if (set.type !== 'path' && set.type !== 'fillPath') continue;
+    let d = '';
+    for (const op of set.ops) {
+      if (op.op==='move') d += `M${op.data[0]} ${op.data[1]} `;
+      else if (op.op==='lineTo') d += `L${op.data[0]} ${op.data[1]} `;
+      else if (op.op==='bcurveTo') d += `C${op.data[0]} ${op.data[1]},${op.data[2]} ${op.data[3]},${op.data[4]} ${op.data[5]} `;
+    }
+    out.push({ d: d.trim() });
+  }
+  return out;
+}
+
+function xPaths(cx, cy, size, color, r01, seed) {
+  const pad = size * 0.22;
+  return [
+    ...extract(gen().line(cx-size/2+pad, cy-size/2+pad, cx+size/2-pad, cy+size/2-pad, markOpts(color, r01, seed))),
+    ...extract(gen().line(cx+size/2-pad, cy-size/2+pad, cx-size/2+pad, cy+size/2-pad, markOpts(color, r01, seed+1)))
+  ];
+}
+function oPaths(cx, cy, size, color, r01, seed) {
+  const r = size * 0.32;
+  return extract(gen().arc(cx, cy, r*2, r*2, -0.2*Math.PI, 2*Math.PI - 0.1, false, markOpts(color, r01, seed)));
+}
+function winLoopPaths(points, color, seed) {
+  const a = points[0], b = points[points.length-1];
+  const dx = b.x-a.x, dy = b.y-a.y;
+  const len = Math.hypot(dx,dy) || 1;
+  const ux = dx/len, uy = dy/len, nx = -uy, ny = ux;
+  const e = 22;
+  const verts = [
+    [a.x+nx*e-ux*e, a.y+ny*e-uy*e],
+    [b.x+nx*e+ux*e, b.y+ny*e+uy*e],
+    [b.x-nx*e+ux*e, b.y-ny*e+uy*e],
+    [a.x-nx*e-ux*e, a.y-ny*e-uy*e],
+    [a.x+nx*e-ux*e, a.y+ny*e-uy*e]
+  ];
+  return extract(gen().curve(verts, { stroke: color, strokeWidth: 2.6, roughness: 2.0, bowing: 2.5, seed }));
+}
+function winStrikePaths(points, color, seed) {
+  const a = points[0], b = points[points.length-1];
+  const len = Math.hypot(b.x-a.x, b.y-a.y) || 1;
+  const ux = (b.x-a.x)/len, uy = (b.y-a.y)/len;
+  return extract(gen().line(a.x-ux*10, a.y-uy*10, b.x+ux*10, b.y+uy*10, { stroke: color, strokeWidth: 2.2, roughness: 1.6, bowing: 1.5, seed }));
+}
+
+function emptyBoard(n) { return Array.from({length:n}, ()=>Array(n).fill(null)); }
+
+function checkWinAt(board, r, c) {
+  const n = board.length;
+  const p = board[r][c];
+  if (!p) return null;
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [dr,dc] of dirs) {
+    const line = [{r,c}];
+    for (let k=1;k<5;k++){ const rr=r+dr*k,cc=c+dc*k; if(rr<0||cc<0||rr>=n||cc>=n||board[rr][cc]!==p) break; line.push({r:rr,c:cc}); }
+    for (let k=1;k<5;k++){ const rr=r-dr*k,cc=c-dc*k; if(rr<0||cc<0||rr>=n||cc>=n||board[rr][cc]!==p) break; line.unshift({r:rr,c:cc}); }
+    if (line.length >= 5) return { player: p, line: line.slice(0,5) };
+  }
+  return null;
+}
+
+function scoreForPlayer(board, r, c, p) {
+  const n = board.length;
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]];
+  let score = 0;
+  for (const [dr,dc] of dirs) {
+    let count=1, openA=false, openB=false;
+    for (let k=1;k<5;k++){ const rr=r+dr*k,cc=c+dc*k; if(rr<0||cc<0||rr>=n||cc>=n) break; if(board[rr][cc]===p) count++; else { if(board[rr][cc]===null) openA=true; break; } }
+    for (let k=1;k<5;k++){ const rr=r-dr*k,cc=c-dc*k; if(rr<0||cc<0||rr>=n||cc>=n) break; if(board[rr][cc]===p) count++; else { if(board[rr][cc]===null) openB=true; break; } }
+    const opens = (openA?1:0)+(openB?1:0);
+    if (count >= 5) score += 100000;
+    else if (count === 4 && opens === 2) score += 10000;
+    else if (count === 4 && opens === 1) score += 1000;
+    else if (count === 3 && opens === 2) score += 500;
+    else if (count === 3 && opens === 1) score += 80;
+    else if (count === 2 && opens === 2) score += 40;
+    else if (count === 2 && opens === 1) score += 8;
+    else score += 1;
+  }
+  return score;
+}
+
+function aiMove(board, me, opp) {
+  const n = board.length;
+  const occ = [];
+  for (let r=0;r<n;r++) for (let c=0;c<n;c++) if (board[r][c]) occ.push([r,c]);
+  if (!occ.length) return [Math.floor(n/2), Math.floor(n/2)];
+  const cellSet = new Set();
+  for (const [r,c] of occ) for (let dr=-2; dr<=2; dr++) for (let dc=-2; dc<=2; dc++) {
+    const rr=r+dr, cc=c+dc;
+    if (rr>=0&&cc>=0&&rr<n&&cc<n&&!board[rr][cc]) cellSet.add(rr*n+cc);
+  }
+  let best = null, bestScore = -1;
+  for (const key of cellSet) {
+    const r = Math.floor(key/n), c = key%n;
+    const s = Math.max(scoreForPlayer(board,r,c,me), scoreForPlayer(board,r,c,opp)*0.9) + Math.random()*2;
+    if (s > bestScore) { bestScore = s; best = [r,c]; }
+  }
+  return best || [Math.floor(n/2), Math.floor(n/2)];
+}
+
+function RoughButton({ label, onClick, color, w=130, h=40 }) {
+  const svgRef = useRef(null);
+  useLayoutEffect(() => {
+    const svg = svgRef.current; if (!svg) return;
+    svg.innerHTML = "";
+    const rc = rough.svg(svg);
+    svg.appendChild(rc.rectangle(3, 3, w-6, h-6, { stroke: color, strokeWidth: 1.4, roughness: 1.8, bowing: 1.5, seed: 17 }));
+  }, [color, w, h, label]);
+  return <button className="pbtn" onClick={onClick} style={{width:w, height:h, color}}><svg ref={svgRef} viewBox={`0 0 ${w} ${h}`}/><span>{label}</span></button>;
+}
+
+function MarkChip({ kind, theme, size=36 }) {
+  const svgRef = useRef(null);
+  useLayoutEffect(() => {
+    const svg = svgRef.current; if (!svg) return;
+    svg.innerHTML = "";
+    const rc = rough.svg(svg);
+    const color = kind === 'X' ? theme.x : theme.o;
+    if (kind === 'X') {
+      svg.appendChild(rc.line(8,8,size-8,size-8,{stroke:color,strokeWidth:2.2,roughness:1.2,seed:3}));
+      svg.appendChild(rc.line(size-8,8,8,size-8,{stroke:color,strokeWidth:2.2,roughness:1.2,seed:5}));
+    } else {
+      svg.appendChild(rc.arc(size/2,size/2,size-14,size-14,-0.2*Math.PI,2*Math.PI-0.1,false,{stroke:color,strokeWidth:2.2,roughness:1.2,seed:7}));
+    }
+  }, [kind, theme, size]);
+  return <svg ref={svgRef} width={size} height={size} viewBox={`0 0 ${size} ${size}`}/>;
+}
+
+function PaperDefs({ theme, showTexture }) {
+  return (
+    <defs>
+      <filter id="paperNoise" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="1.8" numOctaves="2" seed="4"/>
+        <feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.08 0"/>
+        <feComposite in2="SourceGraphic" operator="in"/>
+      </filter>
+      <pattern id="fiber" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+        <rect width="200" height="200" fill={theme.paper}/>
+        {showTexture && <g opacity="0.5"><rect width="200" height="200" fill={theme.paper} filter="url(#paperNoise)"/></g>}
+      </pattern>
+    </defs>
+  );
+}
+
+function Board({ theme, gridSize, roughness01, showTexture, showCoords, state, onCellClick, hovered, onHover }) {
+  const svgRef = useRef(null);
+  const gridGroupRef = useRef(null);
+  const marksGroupRef = useRef(null);
+  const winGroupRef = useRef(null);
+  const cellPx = cellForSize(gridSize);
+  const pad = 28;
+  const boardPx = cellPx * gridSize;
+  const total = boardPx + pad*2;
+  const coordsSpace = showCoords ? 22 : 0;
+  const viewW = total + coordsSpace;
+  const viewH = total + coordsSpace;
+
+  useLayoutEffect(() => {
+    const g = gridGroupRef.current; if (!g) return;
+    g.innerHTML = "";
+    const rc = rough.svg(svgRef.current);
+    g.appendChild(rc.rectangle(pad, pad, boardPx, boardPx, { stroke: theme.grid, strokeWidth: 1.2, roughness: 0.8, bowing: 0.8, seed: 11, fill: 'none' }));
+    for (let i=1;i<gridSize;i++) {
+      const y = pad + i*cellPx;
+      g.appendChild(rc.line(pad+2, y, pad+boardPx-2, y, { stroke: theme.grid, strokeWidth: 0.7, roughness: 0.6, bowing: 0.8, seed: 100+i, strokeLineDash: [2, 3] }));
+    }
+    for (let i=1;i<gridSize;i++) {
+      const x = pad + i*cellPx;
+      g.appendChild(rc.line(x, pad+2, x, pad+boardPx-2, { stroke: theme.grid, strokeWidth: 0.7, roughness: 0.6, bowing: 0.8, seed: 200+i, strokeLineDash: [2, 3] }));
+    }
+    g.setAttribute('opacity', theme.gridOpacity);
+  }, [theme, gridSize, cellPx, boardPx, pad]);
+
+  useLayoutEffect(() => {
+    const g = marksGroupRef.current; if (!g) return;
+    g.innerHTML = "";
+    for (let r=0;r<gridSize;r++) for (let c=0;c<gridSize;c++) {
+      const p = state.board[r][c];
+      if (!p) continue;
+      const cx = pad + c*cellPx + cellPx/2;
+      const cy = pad + r*cellPx + cellPx/2;
+      const size = cellPx * 0.88;
+      const color = p==='X' ? theme.x : theme.o;
+      const seed = seedFor(r,c);
+      const paths = p==='X' ? xPaths(cx,cy,size,color,roughness01,seed) : oPaths(cx,cy,size,color,roughness01,seed);
+      const isNew = state.lastMove && state.lastMove.r===r && state.lastMove.c===c;
+      paths.forEach((pp, i) => {
+        const el = document.createElementNS("http://www.w3.org/2000/svg","path");
+        el.setAttribute("d", pp.d);
+        el.setAttribute("stroke", color);
+        el.setAttribute("stroke-width", 2.1);
+        el.setAttribute("fill", "none");
+        el.setAttribute("stroke-linecap", "round");
+        el.setAttribute("stroke-linejoin", "round");
+        if (isNew) {
+          try {
+            const len = el.getTotalLength ? el.getTotalLength() : 120;
+            el.style.strokeDasharray = `${len}`;
+            el.style.strokeDashoffset = `${len}`;
+            el.style.transition = `stroke-dashoffset ${DRAW_MS}ms cubic-bezier(.55,.2,.3,1) ${i * DRAW_MS * 0.45}ms`;
+            requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.strokeDashoffset = "0"; }));
+          } catch(e) {}
+        }
+        g.appendChild(el);
+      });
+    }
+  }, [state.board, state.lastMove, theme, gridSize, cellPx, pad, roughness01]);
+
+  useLayoutEffect(() => {
+    const g = winGroupRef.current; if (!g) return;
+    g.innerHTML = "";
+    if (!state.win) return;
+    const pts = state.win.line.map(({r,c})=>({ x: pad + c*cellPx + cellPx/2, y: pad + r*cellPx + cellPx/2 }));
+    const strikePaths = winStrikePaths(pts, theme.winStrike, 31);
+    const loopPaths = winLoopPaths(pts, theme.winLoop, 29);
+    const all = [...strikePaths.map(p=>({...p,isLoop:false})), ...loopPaths.map(p=>({...p, isLoop:true}))];
+    all.forEach((pp, i) => {
+      const el = document.createElementNS("http://www.w3.org/2000/svg","path");
+      el.setAttribute("d", pp.d);
+      el.setAttribute("stroke", pp.isLoop ? theme.winLoop : theme.winStrike);
+      el.setAttribute("stroke-width", pp.isLoop ? 2.8 : 2.2);
+      el.setAttribute("fill","none");
+      el.setAttribute("stroke-linecap","round");
+      el.setAttribute("stroke-linejoin","round");
+      try {
+        const len = el.getTotalLength ? el.getTotalLength() : 500;
+        el.style.strokeDasharray = `${len}`;
+        el.style.strokeDashoffset = `${len}`;
+        el.style.transition = `stroke-dashoffset ${WIN_DRAW_MS}ms cubic-bezier(.55,.2,.3,1) ${(pp.isLoop ? 200 : 0) + i*40}ms`;
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{ el.style.strokeDashoffset = "0"; }));
+      } catch(e){}
+      g.appendChild(el);
+    });
+  }, [state.win, theme, gridSize, cellPx, pad]);
+
+  const handleClick = (e) => {
+    const svg = svgRef.current;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const local = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const x = local.x - pad, y = local.y - pad;
+    if (x<0||y<0||x>boardPx||y>boardPx) return;
+    const c = Math.floor(x/cellPx), r = Math.floor(y/cellPx);
+    if (r>=0&&c>=0&&r<gridSize&&c<gridSize) onCellClick(r,c);
+  };
+  const handleMove = (e) => {
+    const svg = svgRef.current;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    const local = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const x = local.x - pad, y = local.y - pad;
+    if (x<0||y<0||x>boardPx||y>boardPx) { onHover(null); return; }
+    const c = Math.floor(x/cellPx), r = Math.floor(y/cellPx);
+    onHover({r,c});
+  };
+
+  const hoverX = hovered ? pad + hovered.c*cellPx + cellPx/2 : 0;
+  const hoverY = hovered ? pad + hovered.r*cellPx + cellPx/2 : 0;
+  const canPlace = hovered && !state.board[hovered.r][hovered.c] && !state.win && state.turn==='X';
+
+  return (
+    <svg ref={svgRef} className="board-svg" viewBox={`0 0 ${viewW} ${viewH}`} onClick={handleClick} onMouseMove={handleMove} onMouseLeave={()=>onHover(null)}>
+      <PaperDefs theme={theme} showTexture={showTexture} />
+      <rect x="0" y="0" width={viewW} height={viewH} fill="url(#fiber)"/>
+      <g opacity="0.08"><path d={`M${viewW-24} 6 L${viewW-6} 6 L${viewW-6} 24 Z`} fill={theme.ui}/></g>
+      {showCoords && (
+        <g fontFamily="JetBrains Mono, monospace" fontSize="9" fill={theme.muted}>
+          {Array.from({length: gridSize}).map((_,i)=>(<text key={'cx'+i} x={pad + i*cellPx + cellPx/2} y={pad-10} textAnchor="middle">{String.fromCharCode(65+i)}</text>))}
+          {Array.from({length: gridSize}).map((_,i)=>(<text key={'cy'+i} x={pad-10} y={pad + i*cellPx + cellPx/2 + 3} textAnchor="middle">{i+1}</text>))}
+        </g>
+      )}
+      <g ref={gridGroupRef}/>
+      {canPlace && (
+        <g opacity="0.28" pointerEvents="none">
+          {state.turn==='X' ? (
+            <g>
+              <line x1={hoverX-cellPx*0.28} y1={hoverY-cellPx*0.28} x2={hoverX+cellPx*0.28} y2={hoverY+cellPx*0.28} stroke={theme.x} strokeWidth="2" strokeLinecap="round"/>
+              <line x1={hoverX+cellPx*0.28} y1={hoverY-cellPx*0.28} x2={hoverX-cellPx*0.28} y2={hoverY+cellPx*0.28} stroke={theme.x} strokeWidth="2" strokeLinecap="round"/>
+            </g>
+          ) : (<circle cx={hoverX} cy={hoverY} r={cellPx*0.3} fill="none" stroke={theme.o} strokeWidth="2"/>)}
+        </g>
+      )}
+      <g ref={marksGroupRef}/>
+      <g ref={winGroupRef}/>
+    </svg>
+  );
+}
+
+function App() {
+  const [tweaks, setTweaks] = useState(TWEAK_DEFAULS);
+  const [tweakOpen, setTweakOpen] = useState(false);
+  const theme = AESTHETICS[tweaks.aesthetic] || AESTHETICS.b;
+  const gridSize = tweaks.gridSize;
+  const roughness01 = tweaks.roughness / 100;
+
+  const [state, setState] = useState(()=>({ board: emptyBoard(gridSize), turn: 'X', moves: 0, lastMove: null, win: null, history: [] }));
+  const [hovered, setHovered] = useState(null);
+  const [thinking, setThinking] = useState(false);
+  const [xWins, setXWins] = useState(0);
+  const [oWins, setOWins] = useState(0);
+  const [difficulty, setDifficulty] = useState('medium');
+
+  useEffect(() => { setState({ board: emptyBoard(gridSize), turn: 'X', moves: 0, lastMove: null, win: null, history: [] }); }, [gridSize]);
+
+  useEffect(() => {
+    const listener = (e) => {
+      if (!e.data || typeof e.data !== 'object') return;
+      if (e.data.type === '__activate_edit_mode') setTweakOpen(true);
+      if (e.data.type === '__deactivate_edit_mode') setTweakOpen(false);
+    };
+    window.addEventListener('message', listener);
+    try { window.parent.postMessage({type:'__edit_mode_available'}, '*'); } catch(e){}
+    return () => window.removeEventListener('message', listener);
+  }, []);
+
+  const updateTweak = (patch) => {
+    setTweaks(prev => {
+      const next = { ...prev, ...patch };
+      try { window.parent.postMessage({type:'__edit_mode_set_keys', edits: patch}, '*'); } catch(e){}
+      return next;
+    });
+  };
+
+  const newGame = useCallback(() => {
+    setState({ board: emptyBoard(gridSize), turn: 'X', moves: 0, lastMove: null, win: null, history: [] });
+    setThinking(false);
+  }, [gridSize]);
+
+  const place = (r, c, player) => {
+    setState(prev => {
+      if (prev.win || prev.board[r][c]) return prev;
+      const board = prev.board.map(row => row.slice());
+      board[r][c] = player;
+      const win = checkWinAt(board, r, c);
+      return { board, turn: player==='X' ? 'O' : 'X', moves: prev.moves+1, lastMove: {r,c,player}, win, history: [...prev.history, {r,c,player}] };
+    });
+  };
+
+  const onCellClick = (r, c) => {
+    if (state.win || state.turn !== 'X' || state.board[r][c]) return;
+    place(r,c,'X');
+  };
+
+  useEffect(() => {
+    if (state.win) {
+      if (state.win.player==='X') setXWins(v=>v+1); else setOWins(v=>v+1);
+      return;
+    }
+    if (state.turn === 'O' && !thinking) {
+      setThinking(true);
+      const delay = difficulty==='easy' ? 350 + Math.random()*300 : difficulty==='medium' ? 500 + Math.random()*400 : 700 + Math.random()*500;
+      const t = setTimeout(() => {
+        const mv = aiMove(state.board, 'O', 'X');
+        if (mv) place(mv[0], mv[1], 'O');
+        setThinking(false);
+      }, delay);
+      return () => clearTimeout(t);
+    }
+  }, [state.turn, state.win, state.board]);
+
+  return (
+    <div className="app" style={{ color: theme.ui }}>
+      <div className="page" style={{background: theme.paper, maxWidth: 1020, width: '100%'}}>
+        <div className="page-inner">
+          <div className="board-wrap">
+            {state.win && (<div className="banner show" style={{color: theme.ui}}>{state.win.player==='X' ? 'Nyertél! (X)' : 'Gép nyert! (O)'}</div>)}
+            <Board theme={theme} gridSize={gridSize} roughness01={roughness01} showTexture={tweaks.paperTexture} showCoords={tweaks.showCoords} state={state} onCellClick={onCellClick} hovered={hovered} onHover={setHovered}/>
+          </div>
+          <aside className="margin" style={{color: theme.ui}}>
+            <div>
+              <h1>Amőba</h1>
+              <div className="sub">öt-öt · five in a row</div>
+            </div>
+            <div className="note-block">
+              <div className="note-label">Turn</div>
+              <div className="turn-row">
+                <div className="turn-chip"><MarkChip kind={state.turn} theme={theme}/></div>
+                <div>
+                  <div className="turn-text">{state.turn==='X' ? 'Your move' : (thinking ? 'Thinking…' : 'Opponent')}</div>
+                  <div style={{fontSize:10, opacity:0.55, letterSpacing:'0.1em', marginTop: 2}}>{state.turn==='X' ? 'Place an X' : 'Gép gondolkodik'}</div>
+                </div>
+              </div>
+            </div>
+            <div className="note-block">
+              <div className="note-label">Score</div>
+              <div className="stats">
+                <div className="stat"><div className="n">{xWins}</div><div className="l">X (you)</div></div>
+                <div className="stat"><div className="n">{oWins}</div><div className="l">O (cpu)</div></div>
+                <div className="stat"><div className="n">{state.moves}</div><div className="l">moves</div></div>
+                <div className="stat"><div className="n">{gridSize}×{gridSize}</div><div className="l">board</div></div>
+              </div>
+            </div>
+            <div className="note-block">
+              <div className="note-label">Difficulty</div>
+              <div className="diff-row">
+                {['easy','medium','hard'].map(d => (<button key={d} className={"diff " + (difficulty===d?'active':'')} onClick={()=>setDifficulty(d)}>{d}</button>))}
+              </div>
+            </div>
+            <div className="note-block">
+              <div className="note-label">Actions</div>
+              <div className="btn-row">
+                <RoughButton label="New game" onClick={newGame} color={theme.ui} w={120} h={38}/>
+                <RoughButton label="Undo" onClick={() => {
+                  setState(prev => {
+                    if (!prev.history.length) return prev;
+                    const steps = prev.history.length >= 2 && !prev.win ? 2 : 1;
+                    const hist = prev.history.slice(0, -steps);
+                    const board = emptyBoard(gridSize);
+                    hist.forEach(m => { board[m.r][m.c] = m.player; });
+                    return { board, turn: 'X', moves: hist.length, lastMove: hist[hist.length-1]||null, win: null, history: hist };
+                  });
+                }} color={theme.ui} w={90} h={38}/>
+              </div>
+            </div>
+            <div className="footer-note">{theme.inkName} · {gridSize}×{gridSize} · v1.0</div>
+          </aside>
+        </div>
+      </div>
+
+      <div className={"tweaks " + (tweakOpen ? 'show' : '')}>
+        <h3>Tweaks</h3>
+        <div className="tw-row">
+          <label className="tw-label">Aesthetic</label>
+          <div className="tw-seg">
+            {Object.entries(AESTHETICS).map(([k,v]) => (<button key={k} className={tweaks.aesthetic===k?'active':''} onClick={()=>updateTweak({aesthetic:k})}><span className="sw" style={{background: v.x}}></span>{k}</button>))}
+          </div>
+          <div style={{fontSize:10,opacity:0.5,marginTop:4}}>{theme.name}</div>
+        </div>
+        <div className="tw-row">
+          <label className="tw-label">Grid size</label>
+          <div className="tw-seg">{[13,15,19].map(n => (<button key={n} className={tweaks.gridSize===n?'active':''} onClick={()=>updateTweak({gridSize:n})}>{n}×{n}</button>))}</div>
+        </div>
+        <div className="tw-row">
+          <label className="tw-label">Roughness <span className="tw-val">{tweaks.roughness}</span></label>
+          <input type="range" min="0" max="100" step="5" value={tweaks.roughness} className="tw-slider" onChange={e=>updateTweak({roughness: parseInt(e.target.value,10)})}/>
+        </div>
+        <div className="tw-row"><label className="tw-check"><input type="checkbox" checked={tweaks.paperTexture} onChange={e=>updateTweak({paperTexture: e.target.checked})}/>Paper fibre texture</label></div>
+        <div className="tw-row"><label className="tw-check"><input type="checkbox" checked={tweaks.showCoords} onChange={e=>updateTweak({showCoords: e.target.checked})}/>Show coordinates (A–O, 1–{gridSize})</label></div>
+        <div className="tw-row" style={{paddingTop:8, borderTop:'1px solid rgba(0,0,0,0.08)'}}>
+          <a href="handoff/README.html" style={{fontSize:11, color:'inherit', textDecoration:'underline', opacity:0.7}}>→ Claude Code handoff bundle</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+} catch(e) { document.getElementById('root').innerHTML = '<pre style="padding:20px">'+(e.stack||e.message)+'</pre>'; console.error(e); }
+</script>
+</body>
+</html>
