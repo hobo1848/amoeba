@@ -69,7 +69,7 @@ export function App() {
     <div className="app" style={{ color: theme.ui }}>
       <div
         className="page"
-        style={{ background: theme.paper, maxWidth: 1020, width: '100%' }}
+        style={{ background: theme.paper }}
       >
         <div className="page-inner">
           <div className="board-wrap">

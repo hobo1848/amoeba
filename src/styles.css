@@ -12,6 +12,8 @@ body {
 .app { min-height: 100vh; display: grid; place-items: center; padding: 32px 24px; }
 .page {
   position: relative;
+  max-width: 1020px;
+  width: 100%;
   border-radius: 4px;
   box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), 0 18px 40px -12px rgba(0,0,0,0.18);
   transition: background-color .35s ease;
@@ -187,4 +189,63 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .app, .banner { animation: none; transition: none; }
+}
+
+/* ── Mobile: maximise grid real estate ───────────────────────── */
+@media (max-width: 600px) {
+  .app {
+    padding: 0;
+    align-items: flex-start;
+  }
+  .page {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+  .page::before { display: none; }
+  .page-inner {
+    padding: 8px 8px 16px;
+    gap: 8px;
+  }
+
+  /* Compact sidebar into a horizontal strip below the board */
+  .margin {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 16px;
+    padding-top: 0;
+  }
+  /* Title spans full width at the top of the strip */
+  .margin > div:first-child {
+    flex-basis: 100%;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .margin h1 { font-size: 22px; }
+  .margin .sub { margin-top: 0; font-size: 9px; }
+  .footer-note { display: none; }
+
+  /* Remove note-block dividers and labels to save vertical space */
+  .note-block { padding: 0; border-top: none; }
+  .note-label { display: none; }
+
+  /* Compact score grid to a single row */
+  .stats { grid-template-columns: repeat(4, auto); gap: 4px 12px; }
+  .stat .n { font-size: 15px; }
+  .stat .l { font-size: 8px; }
+
+  /* Smaller turn indicator */
+  .turn-row { gap: 8px; }
+  .turn-chip { width: 30px; height: 30px; }
+  .turn-text { font-size: 16px; }
+
+  /* Compact difficulty + action buttons */
+  .diff { font-size: 16px; padding: 3px 8px; }
+  .pbtn { font-size: 16px; padding: 6px 12px 8px; }
+  .btn-row { gap: 8px; }
+
+  /* Win banner: keep visible on small screen */
+  .banner { font-size: 18px; padding: 5px 12px 6px; }
 }
