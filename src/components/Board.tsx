@@ -28,7 +28,7 @@ export function Board({
   const cellPx = BOARD.cellPx(gridSize);
 
   // Use a tighter border on narrow screens so the grid cells are as large as possible
-  const [pad, setPad] = useState(BOARD.pad);
+  const [pad, setPad] = useState<number>(BOARD.pad);
   useLayoutEffect(() => {
     const mq = window.matchMedia('(max-width: 600px)');
     const update = (matches: boolean) => setPad(matches ? 14 : BOARD.pad);
