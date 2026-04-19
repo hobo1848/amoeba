@@ -54,7 +54,7 @@ export function Board({
     if (r >= 0 && c >= 0 && r < gridSize && c < gridSize) onCellClick(r, c);
   };
 
-  const svgCoordsFromTouch = (touch: React.Touch) => {
+  const svgCoordsFromTouch = (touch: Touch) => {
     const svg = svgRef.current;
     if (!svg) return null;
     const pt = svg.createSVGPoint();
