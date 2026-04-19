@@ -120,3 +120,8 @@ The delay values still live in `TIMINGS.aiDelayMs`; those are presentation only.
 
 The game also has no draw state yet. In practice this is rare on larger boards,
 but a complete rules layer would explicitly detect a full board with no winner.
+
+The tactical block step handles only the first identified winning threat. If the
+human creates a fork — two simultaneous winning cells — the AI blocks one of
+them but cannot prevent the other. A minimax or threat-space search would be
+needed to handle forks reliably.

@@ -156,6 +156,8 @@ function compareCandidates(a: ScoredCandidate, b: ScoredCandidate): number {
   );
 }
 
+// Uses rng() twice on the mistake path: once to decide whether to deviate,
+// once to pick which alternative. Callers using sequenceRng must budget for both.
 function chooseFromProfile(
   candidates: ScoredCandidate[],
   profile: DifficultyProfile,
@@ -180,6 +182,7 @@ export function aiMove(board: Board, options: AiMoveOptions): Move {
   } = options;
   const profile = AI_DIFFICULTY[difficulty];
   const candidates = candidateMoves(board);
+  if (!candidates.length) return [Math.floor(board.length / 2), Math.floor(board.length / 2)];
 
   const aiWins = immediateWinningMoves(board, candidates, aiPlayer);
   if (aiWins.length) return aiWins[0];

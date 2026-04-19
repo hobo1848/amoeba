@@ -111,6 +111,24 @@ describe('aiMove', () => {
     }));
   });
 
+  it('easy blocks an immediate human win when rng is below blockImmediateWinChance', () => {
+    // easy blockImmediateWinChance = 0.35; rng=0.1 < 0.35 takes the immediate-block path
+    const board = boardWithMoves(15, [
+      [5, 4, 'X'],
+      [5, 5, 'X'],
+      [5, 6, 'X'],
+      [5, 7, 'X'],
+      [8, 8, 'O'],
+    ]);
+
+    expect(aiMove(board, {
+      aiPlayer: 'O',
+      humanPlayer: 'X',
+      difficulty: 'easy',
+      rng: repeatingRng(0.1),
+    })).toEqual([5, 3]);
+  });
+
   it('easy can choose a non-best move when its mistake path triggers', () => {
     const board = boardWithMoves(15, [
       [7, 7, 'O'],
