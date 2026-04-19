@@ -4,31 +4,51 @@ export type Board = Cell[][];
 
 export interface WinResult {
   player: Player;
-  line: { r: number; c: number }[];
+  line: { row: number; col: number }[];
 }
 
-export function checkWinAt(board: Board, r: number, c: number): WinResult | null {
-  const n = board.length;
-  const p = board[r][c];
-  if (!p) return null;
-  const dirs: [number, number][] = [[0,1],[1,0],[1,1],[1,-1]];
-  for (const [dr, dc] of dirs) {
-    const line: { r: number; c: number }[] = [{ r, c }];
-    for (let k = 1; k < 5; k++) {
-      const rr = r + dr*k, cc = c + dc*k;
-      if (rr < 0 || cc < 0 || rr >= n || cc >= n || board[rr][cc] !== p) break;
-      line.push({ r: rr, c: cc });
+export function checkWinAt(board: Board, row: number, col: number): WinResult | null {
+  const boardSize = board.length;
+  const player = board[row][col];
+  if (!player) return null;
+
+  // A fresh win can only pass through the newest stone, so checking these
+  // four axes is enough: horizontal, vertical, and the two diagonals.
+  const directions: [rowStep: number, colStep: number][] = [[0,1],[1,0],[1,1],[1,-1]];
+  for (const [rowStep, colStep] of directions) {
+    const line: { row: number; col: number }[] = [{ row, col }];
+
+    for (let distance = 1; distance < 5; distance++) {
+      const nextRow = row + rowStep * distance;
+      const nextCol = col + colStep * distance;
+      if (
+        nextRow < 0 ||
+        nextCol < 0 ||
+        nextRow >= boardSize ||
+        nextCol >= boardSize ||
+        board[nextRow][nextCol] !== player
+      ) break;
+      line.push({ row: nextRow, col: nextCol });
     }
-    for (let k = 1; k < 5; k++) {
-      const rr = r - dr*k, cc = c - dc*k;
-      if (rr < 0 || cc < 0 || rr >= n || cc >= n || board[rr][cc] !== p) break;
-      line.unshift({ r: rr, c: cc });
+
+    for (let distance = 1; distance < 5; distance++) {
+      const nextRow = row - rowStep * distance;
+      const nextCol = col - colStep * distance;
+      if (
+        nextRow < 0 ||
+        nextCol < 0 ||
+        nextRow >= boardSize ||
+        nextCol >= boardSize ||
+        board[nextRow][nextCol] !== player
+      ) break;
+      line.unshift({ row: nextRow, col: nextCol });
     }
-    if (line.length >= 5) return { player: p as Player, line: line.slice(0, 5) };
+
+    if (line.length >= 5) return { player, line: line.slice(0, 5) };
   }
   return null;
 }
 
-export function emptyBoard(n: number): Board {
-  return Array.from({ length: n }, () => Array(n).fill(null));
+export function emptyBoard(boardSize: number): Board {
+  return Array.from({ length: boardSize }, () => Array(boardSize).fill(null));
 }

@@ -11,12 +11,12 @@ interface Props {
   size: number;
   theme: Aesthetic;
   roughness01: number;
-  r: number;
-  c: number;
+  row: number;
+  col: number;
   animate: boolean;
 }
 
-export function Mark({ kind, cx, cy, size, theme, roughness01, r, c, animate }: Props) {
+export function Mark({ kind, cx, cy, size, theme, roughness01, row, col, animate }: Props) {
   const gRef = useRef<SVGGElement>(null);
 
   useLayoutEffect(() => {
@@ -24,7 +24,7 @@ export function Mark({ kind, cx, cy, size, theme, roughness01, r, c, animate }: 
     if (!g) return;
     g.innerHTML = '';
     const color = kind === 'X' ? theme.x : theme.o;
-    const seed = seedFor(r, c);
+    const seed = seedFor(row, col);
     const paths = kind === 'X'
       ? xPaths(cx, cy, size, color, roughness01, seed)
       : oPaths(cx, cy, size, color, roughness01, seed);
@@ -50,7 +50,7 @@ export function Mark({ kind, cx, cy, size, theme, roughness01, r, c, animate }: 
       }
       g.appendChild(el);
     });
-  }, [kind, cx, cy, size, theme, roughness01, r, c, animate]);
+  }, [kind, cx, cy, size, theme, roughness01, row, col, animate]);
 
   return <g ref={gRef} />;
 }

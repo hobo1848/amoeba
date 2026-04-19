@@ -2,8 +2,8 @@ import rough from 'roughjs';
 
 const gen = rough.generator();
 
-export const seedFor = (r: number, c: number, salt = 0): number =>
-  (((r * 73856093) ^ (c * 19349663) ^ (salt * 83492791)) >>> 0);
+export const seedFor = (row: number, col: number, salt = 0): number =>
+  (((row * 73856093) ^ (col * 19349663) ^ (salt * 83492791)) >>> 0);
 
 function markOpts(color: string, r01: number, seed: number) {
   return {

@@ -72,6 +72,10 @@ The `design/` folder preserves the original handoff from [claude.ai/design](http
 - **`design/README.html`** — handoff doc with design tokens, Rough.js configs, component tree, interaction spec, and accessibility notes
 - **`design/chat1.md`** — full design-session transcript showing how the aesthetic and feature decisions were reached
 
+## Developer notes
+
+- **`docs/architecture-and-ai.md`** — readable walkthrough of the runtime flow, game reducer, rendering layers, and current AI heuristic.
+
 ## Tech stack
 
 - [Vite](https://vitejs.dev/) + [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) (strict)

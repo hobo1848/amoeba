@@ -2,8 +2,8 @@ import { useReducer } from 'react';
 import { type Board, type Player, type WinResult, emptyBoard, checkWinAt } from './checkWin';
 
 export interface Move {
-  r: number;
-  c: number;
+  row: number;
+  col: number;
   player: Player;
 }
 
@@ -17,40 +17,46 @@ export interface GameState {
 }
 
 type Action =
-  | { type: 'PLACE'; r: number; c: number; player: Player }
+  | { type: 'PLACE'; row: number; col: number; player: Player }
   | { type: 'UNDO'; gridSize: number }
   | { type: 'RESET'; gridSize: number };
 
 function gameReducer(state: GameState, action: Action): GameState {
   switch (action.type) {
     case 'PLACE': {
-      const { r, c, player } = action;
-      if (state.win || state.board[r][c]) return state;
+      const { row, col, player } = action;
+      if (state.win || state.board[row][col]) return state;
+
+      // Copy each row before editing so React receives a fresh board object.
       const board = state.board.map(row => row.slice());
-      board[r][c] = player;
-      const win = checkWinAt(board, r, c);
+      board[row][col] = player;
+      const win = checkWinAt(board, row, col);
       return {
         board,
         turn: player === 'X' ? 'O' : 'X',
         moves: state.moves + 1,
-        lastMove: { r, c, player },
+        lastMove: { row, col, player },
         win,
-        history: [...state.history, { r, c, player }],
+        history: [...state.history, { row, col, player }],
       };
     }
     case 'UNDO': {
       if (!state.history.length) return state;
+
+      // During an active game, undo removes the human move and the AI reply.
+      // After a win, only the winning move is removed so the board returns to
+      // the position immediately before the result.
       const steps = state.history.length >= 2 && !state.win ? 2 : 1;
-      const hist = state.history.slice(0, -steps);
+      const history = state.history.slice(0, -steps);
       const board = emptyBoard(action.gridSize);
-      hist.forEach(m => { board[m.r][m.c] = m.player; });
+      history.forEach(move => { board[move.row][move.col] = move.player; });
       return {
         board,
         turn: 'X',
-        moves: hist.length,
-        lastMove: hist[hist.length - 1] ?? null,
+        moves: history.length,
+        lastMove: history[history.length - 1] ?? null,
         win: null,
-        history: hist,
+        history,
       };
     }
     case 'RESET':
@@ -69,8 +75,8 @@ export function useGame(gridSize: number) {
   const [state, dispatch] = useReducer(
     gameReducer,
     gridSize,
-    (n): GameState => ({
-      board: emptyBoard(n),
+    (boardSize): GameState => ({
+      board: emptyBoard(boardSize),
       turn: 'X',
       moves: 0,
       lastMove: null,
@@ -79,8 +85,8 @@ export function useGame(gridSize: number) {
     }),
   );
 
-  const place = (r: number, c: number, player: Player) =>
-    dispatch({ type: 'PLACE', r, c, player });
+  const place = (row: number, col: number, player: Player) =>
+    dispatch({ type: 'PLACE', row, col, player });
 
   const undo = () => dispatch({ type: 'UNDO', gridSize });
   const reset = () => dispatch({ type: 'RESET', gridSize });

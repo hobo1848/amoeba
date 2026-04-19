@@ -15,9 +15,9 @@ interface Props {
   showTexture: boolean;
   showCoords: boolean;
   state: GameState;
-  hovered: { r: number; c: number } | null;
-  onCellClick: (r: number, c: number) => void;
-  onHover: (pos: { r: number; c: number } | null) => void;
+  hovered: { row: number; col: number } | null;
+  onCellClick: (row: number, col: number) => void;
+  onHover: (pos: { row: number; col: number } | null) => void;
 }
 
 export function Board({
@@ -50,8 +50,8 @@ export function Board({
     const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
     const x = local.x - pad, y = local.y - pad;
     if (x < 0 || y < 0 || x > boardPx || y > boardPx) return;
-    const c = Math.floor(x / cellPx), r = Math.floor(y / cellPx);
-    if (r >= 0 && c >= 0 && r < gridSize && c < gridSize) onCellClick(r, c);
+    const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
+    if (row >= 0 && col >= 0 && row < gridSize && col < gridSize) onCellClick(row, col);
   };
 
   const svgCoordsFromTouch = (touch: { clientX: number; clientY: number }) => {
@@ -62,9 +62,9 @@ export function Board({
     const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
     const x = local.x - pad, y = local.y - pad;
     if (x < 0 || y < 0 || x > boardPx || y > boardPx) return null;
-    const c = Math.floor(x / cellPx), r = Math.floor(y / cellPx);
-    if (r < 0 || c < 0 || r >= gridSize || c >= gridSize) return null;
-    return { r, c };
+    const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
+    if (row < 0 || col < 0 || row >= gridSize || col >= gridSize) return null;
+    return { row, col };
   };
 
   const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
@@ -80,13 +80,13 @@ export function Board({
     const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
     const x = local.x - pad, y = local.y - pad;
     if (x < 0 || y < 0 || x > boardPx || y > boardPx) { onHover(null); return; }
-    const c = Math.floor(x / cellPx), r = Math.floor(y / cellPx);
-    onHover({ r, c });
+    const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
+    onHover({ row, col });
   };
 
-  const hoverX = hovered ? pad + hovered.c * cellPx + cellPx / 2 : 0;
-  const hoverY = hovered ? pad + hovered.r * cellPx + cellPx / 2 : 0;
-  const canPlace = hovered && !state.board[hovered.r][hovered.c] && !state.win && state.turn === 'X';
+  const hoverX = hovered ? pad + hovered.col * cellPx + cellPx / 2 : 0;
+  const hoverY = hovered ? pad + hovered.row * cellPx + cellPx / 2 : 0;
+  const canPlace = hovered && !state.board[hovered.row][hovered.col] && !state.win && state.turn === 'X';
 
   return (
     <svg
@@ -134,24 +134,24 @@ export function Board({
         </g>
       )}
 
-      {Array.from({ length: gridSize }, (_, r) =>
-        Array.from({ length: gridSize }, (_, c) => {
-          const p = state.board[r][c] as Player | null;
-          if (!p) return null;
-          const cx = pad + c * cellPx + cellPx / 2;
-          const cy = pad + r * cellPx + cellPx / 2;
-          const isNew = !!(state.lastMove && state.lastMove.r === r && state.lastMove.c === c);
+      {Array.from({ length: gridSize }, (_, row) =>
+        Array.from({ length: gridSize }, (_, col) => {
+          const player = state.board[row][col] as Player | null;
+          if (!player) return null;
+          const cx = pad + col * cellPx + cellPx / 2;
+          const cy = pad + row * cellPx + cellPx / 2;
+          const isNew = !!(state.lastMove && state.lastMove.row === row && state.lastMove.col === col);
           return (
             <Mark
-              key={`${r}-${c}`}
-              kind={p}
+              key={`${row}-${col}`}
+              kind={player}
               cx={cx}
               cy={cy}
               size={cellPx * 0.88}
               theme={theme}
               roughness01={roughness01}
-              r={r}
-              c={c}
+              row={row}
+              col={col}
               animate={isNew}
             />
           );

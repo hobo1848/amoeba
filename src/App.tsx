@@ -23,7 +23,7 @@ export function App() {
   const roughness01 = tweaks.roughness / 100;
 
   const { state, place, undo, reset } = useGame(gridSize);
-  const [hovered, setHovered] = useState<{ r: number; c: number } | null>(null);
+  const [hovered, setHovered] = useState<{ row: number; col: number } | null>(null);
   const [thinking, setThinking] = useState(false);
   const [xWins, setXWins] = useState(0);
   const [oWins, setOWins] = useState(0);
@@ -36,9 +36,9 @@ export function App() {
     setThinking(false);
   }, [reset]);
 
-  const onCellClick = (r: number, c: number) => {
-    if (state.win || state.turn !== 'X' || state.board[r][c]) return;
-    place(r, c, 'X');
+  const onCellClick = (row: number, col: number) => {
+    if (state.win || state.turn !== 'X' || state.board[row][col]) return;
+    place(row, col, 'X');
   };
 
   useEffect(() => {
@@ -52,8 +52,8 @@ export function App() {
       const [lo, hi] = TIMINGS.aiDelayMs[difficulty];
       const delay = lo + Math.random() * (hi - lo);
       const t = setTimeout(() => {
-        const mv = aiMove(state.board, 'O', 'X');
-        place(mv[0], mv[1], 'O');
+        const [row, col] = aiMove(state.board, 'O', 'X');
+        place(row, col, 'O');
         setThinking(false);
       }, delay);
       return () => clearTimeout(t);

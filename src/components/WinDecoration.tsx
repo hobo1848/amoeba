@@ -18,9 +18,9 @@ export function WinDecoration({ win, theme, cellPx, pad }: Props) {
     const g = gRef.current;
     if (!g) return;
     g.innerHTML = '';
-    const pts = win.line.map(({ r, c }) => ({
-      x: pad + c * cellPx + cellPx / 2,
-      y: pad + r * cellPx + cellPx / 2,
+    const pts = win.line.map(({ row, col }) => ({
+      x: pad + col * cellPx + cellPx / 2,
+      y: pad + row * cellPx + cellPx / 2,
     }));
 
     const strikePaths = winStrikePaths(pts, theme.winStrike, 31);
