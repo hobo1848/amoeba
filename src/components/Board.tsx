@@ -27,16 +27,16 @@ export function Board({
   const svgRef = useRef<SVGSVGElement>(null);
   const cellPx = BOARD.cellPx(gridSize);
 
-  // Use a tighter border on narrow screens so the grid cells are as large as possible
-  const [pad, setPad] = useState<number>(BOARD.pad);
+  const [isMobile, setIsMobile] = useState(false);
   useLayoutEffect(() => {
     const mq = window.matchMedia('(max-width: 600px)');
-    const update = (matches: boolean) => setPad(matches ? 14 : BOARD.pad);
-    update(mq.matches);
-    const handler = (e: MediaQueryListEvent) => update(e.matches);
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+  // Use a tighter border on narrow screens so the grid cells are as large as possible
+  const pad = isMobile ? 14 : BOARD.pad;
   const boardPx = cellPx * gridSize;
   const coordsSpace = showCoords ? 22 : 0;
   const viewW = boardPx + pad * 2 + coordsSpace;
