@@ -29,7 +29,7 @@ export function App() {
   const [oWins, setOWins] = useState(0);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
 
-  useEffect(() => { reset(); }, [gridSize]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { reset(); setThinking(false); setHovered(null); }, [gridSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const newGame = useCallback(() => {
     reset();

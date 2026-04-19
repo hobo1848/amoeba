@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [claude/implement-handoff-design-5iUYj]
+    branches: [main]
   workflow_dispatch:
 
 permissions:

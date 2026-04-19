@@ -28,11 +28,11 @@ interface ScoredCandidate {
 
 const AI_DIFFICULTY: Record<Difficulty, DifficultyProfile> = {
   easy: {
-    defenseWeight: 0.65,
-    randomJitter: 60,
-    mistakeChance: 0.65,
-    candidatePoolSize: 6,
-    blockImmediateWinChance: 0.35,
+    defenseWeight: 0.75,
+    randomJitter: 22,
+    mistakeChance: 0.38,
+    candidatePoolSize: 4,
+    blockImmediateWinChance: 0.55,
   },
   medium: {
     defenseWeight: 0.9,
