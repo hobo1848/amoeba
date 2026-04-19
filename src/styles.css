@@ -266,4 +266,153 @@ body {
 
   /* Win banner: keep visible on small screen */
   .banner { font-size: 18px; padding: 5px 12px 6px; }
+
+  /* Shape stats: hide labels on tiny screens, just show numbers */
+  .shape-row { font-size: 9px; }
+  .shape-label { font-size: 8px; }
+  .this-game-line { font-size: 8px; }
 }
+
+/* ── Pattern recognition styles ─────────────────────────────────────────── */
+
+@keyframes patternFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Shape counters table */
+.shape-stats {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 3px 10px;
+  align-items: baseline;
+}
+.shape-row--header .shape-col-head {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  text-align: right;
+}
+.shape-row {
+  display: contents;
+  font-size: 10px;
+}
+.shape-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
+.shape-val {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+  font-family: 'Caveat', cursive;
+}
+
+/* This-game/avg line */
+.this-game-line {
+  margin-top: 8px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.60;
+}
+
+/* Show patterns toggle — same style as diff buttons */
+.patterns-toggle-row {
+  margin-top: 10px;
+}
+.patterns-toggle {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.85;
+  position: relative;
+}
+.patterns-toggle .toggle-state {
+  font-weight: 700;
+}
+.patterns-toggle.on::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 1.5px;
+  background: currentColor;
+  border-radius: 2px;
+  opacity: 0.45;
+}
+.patterns-toggle:hover { opacity: 1; }
+
+/* What gets recognized? link */
+.reference-toggle {
+  display: block;
+  margin-top: 8px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  text-align: left;
+  text-transform: lowercase;
+}
+.reference-toggle:hover { opacity: 0.9; }
+
+/* Inline pattern reference */
+.pattern-reference {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px dashed rgba(0,0,0,0.1);
+  padding-top: 8px;
+}
+.ref-entry {}
+.ref-name {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+.ref-desc {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  line-height: 1.5;
+  margin-bottom: 3px;
+}
+.ref-diagram {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  opacity: 0.7;
+  letter-spacing: 0.08em;
+}
+
+/* Reset stats link in footer */
+.reset-stats-link {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.45;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.reset-stats-link:hover { opacity: 0.75; }

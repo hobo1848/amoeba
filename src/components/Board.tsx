@@ -7,6 +7,9 @@ import { PaperDefs } from './PaperDefs';
 import { Grid } from './Grid';
 import { Mark } from './Mark';
 import { WinDecoration } from './WinDecoration';
+import { PatternOutlines } from './PatternOutlines';
+import type { DetectedShape } from '../game/patterns';
+import type { BlockedThreatAnim, OutlineVariant } from '../game/usePatternStats';
 
 interface Props {
   theme: Aesthetic;
@@ -18,11 +21,18 @@ interface Props {
   hovered: { row: number; col: number } | null;
   onCellClick: (row: number, col: number) => void;
   onHover: (pos: { row: number; col: number } | null) => void;
+  activeShapes?: DetectedShape[];
+  forkShapeKeys?: Set<string>;
+  blockedAnim?: BlockedThreatAnim | null;
+  showPatterns?: boolean;
+  outlineVariant?: OutlineVariant;
 }
 
 export function Board({
   theme, gridSize, roughness01, showTexture, showCoords,
   state, hovered, onCellClick, onHover,
+  activeShapes = [], forkShapeKeys = new Set(), blockedAnim = null,
+  showPatterns = true, outlineVariant = 'A',
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const cellPx = BOARD.cellPx(gridSize);
@@ -160,6 +170,18 @@ export function Board({
             />
           );
         })
+      )}
+
+      {showPatterns && (
+        <PatternOutlines
+          shapes={activeShapes}
+          forkShapeKeys={forkShapeKeys}
+          blockedAnim={blockedAnim}
+          cellPx={cellPx}
+          pad={pad}
+          theme={theme}
+          variant={outlineVariant}
+        />
       )}
 
       {state.win && (
