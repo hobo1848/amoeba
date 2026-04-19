@@ -86,7 +86,11 @@ export function Board({
 
   const hoverX = hovered ? pad + hovered.col * cellPx + cellPx / 2 : 0;
   const hoverY = hovered ? pad + hovered.row * cellPx + cellPx / 2 : 0;
-  const canPlace = hovered && !state.board[hovered.row][hovered.col] && !state.win && state.turn === 'X';
+  const canPlace = hovered &&
+    hovered.row < state.board.length &&
+    !state.board[hovered.row][hovered.col] &&
+    !state.win &&
+    state.turn === 'X';
 
   return (
     <svg
@@ -134,9 +138,9 @@ export function Board({
         </g>
       )}
 
-      {Array.from({ length: gridSize }, (_, row) =>
-        Array.from({ length: gridSize }, (_, col) => {
-          const player = state.board[row][col] as Player | null;
+      {state.board.flatMap((boardRow, row) =>
+        boardRow.map((cell, col) => {
+          const player = cell as Player | null;
           if (!player) return null;
           const cx = pad + col * cellPx + cellPx / 2;
           const cy = pad + row * cellPx + cellPx / 2;
