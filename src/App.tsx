@@ -89,6 +89,7 @@ export function App() {
               onCellClick={onCellClick}
               onHover={setHovered}
             />
+            <button className="board-new-game" onClick={newGame} style={{ color: theme.ui }}>new game</button>
           </div>
 
           <MarginNotes

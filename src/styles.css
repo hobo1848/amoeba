@@ -38,6 +38,24 @@ body {
 }
 
 .board-wrap { position: relative; user-select: none; touch-action: manipulation; }
+
+.board-new-game {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  opacity: 0.55;
+  padding: 6px 0 2px;
+  width: 100%;
+  text-align: center;
+  letter-spacing: 0.05em;
+}
+.board-new-game:hover { opacity: 0.85; }
+@media (min-width: 601px) and (max-width: 980px) {
+  .board-new-game { display: block; }
+}
 .board-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
 
 .margin { display: flex; flex-direction: column; gap: 18px; padding-top: 6px; }
