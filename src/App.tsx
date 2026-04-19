@@ -52,7 +52,11 @@ export function App() {
       const [lo, hi] = TIMINGS.aiDelayMs[difficulty];
       const delay = lo + Math.random() * (hi - lo);
       const t = setTimeout(() => {
-        const [row, col] = aiMove(state.board, 'O', 'X');
+        const [row, col] = aiMove(state.board, {
+          aiPlayer: 'O',
+          humanPlayer: 'X',
+          difficulty,
+        });
         place(row, col, 'O');
         setThinking(false);
       }, delay);

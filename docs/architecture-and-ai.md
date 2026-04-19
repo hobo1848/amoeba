@@ -60,7 +60,9 @@ placement and animation.
 ## AI Model
 
 The AI is a shallow heuristic, not minimax and not machine learning. It does not
-simulate future turns. Instead, it chooses the best-looking move right now.
+simulate future turns. Instead, it scores the best-looking moves right now, then
+uses the selected difficulty profile to decide how sharp or fallible the final
+choice should be.
 
 The algorithm:
 
@@ -68,10 +70,12 @@ The algorithm:
 2. If the board is empty, play the center.
 3. Build a candidate set of empty cells within two rows/columns of any occupied
    cell.
-4. Score each candidate as both an attacking move for `O` and a blocking move
+4. First check direct tactics: take an immediate AI win, then decide whether to
+   block an immediate human win.
+5. Score each candidate as both an attacking move for `O` and a blocking move
    against `X`.
-5. Play the candidate with the best score, plus a tiny random jitter so games do
-   not feel perfectly scripted.
+6. Sort the candidates, then pick from the top of the list according to the
+   difficulty profile.
 
 The scoring function pretends the candidate cell already contains the evaluated
 player. For each of the four axes, it counts contiguous stones in both
@@ -93,15 +97,31 @@ The score table is deliberately simple:
 The final move score is the larger of:
 
 - the AI's attack score
-- the human's threat score, weighted by `0.9`
+- the human's threat score, weighted by the difficulty's defense value
 
-That `0.9` means the AI slightly prefers winning or building its own threat over
-blocking an equally valued human shape.
+That defense value controls how urgently the AI treats blocking. Easy is more
+attack-biased and noisy, medium is close to the original balanced heuristic, and
+hard treats defense as equally important.
+
+## Difficulty Profiles
+
+Difficulty affects decision quality as well as the visible thinking delay:
+
+- Easy uses high randomness, weaker defense, and often chooses from a wider pool
+  of plausible moves.
+- Medium mostly chooses the best heuristic move, but can occasionally pick a
+  nearby alternative and can sometimes miss an immediate block.
+- Hard has minimal randomness, always takes immediate wins, always blocks
+  immediate human wins, and chooses the top-scored candidate.
+
+The delay values still live in `TIMINGS.aiDelayMs`; those are presentation only.
 
 ## Current Limits
 
-Difficulty currently changes only the thinking delay. The AI strength is the
-same on easy, medium, and hard.
-
 The game also has no draw state yet. In practice this is rare on larger boards,
 but a complete rules layer would explicitly detect a full board with no winner.
+
+The tactical block step handles only the first identified winning threat. If the
+human creates a fork — two simultaneous winning cells — the AI blocks one of
+them but cannot prevent the other. A minimax or threat-space search would be
+needed to handle forks reliably.
