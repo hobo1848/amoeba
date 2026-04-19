@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState, useLayoutEffect } from 'react';
 import type { Aesthetic } from '../tokens';
 import { BOARD } from '../tokens';
 import type { GameState } from '../game/useGame';
@@ -26,7 +26,17 @@ export function Board({
 }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
   const cellPx = BOARD.cellPx(gridSize);
-  const pad = BOARD.pad;
+
+  // Use a tighter border on narrow screens so the grid cells are as large as possible
+  const [pad, setPad] = useState(BOARD.pad);
+  useLayoutEffect(() => {
+    const mq = window.matchMedia('(max-width: 600px)');
+    const update = (matches: boolean) => setPad(matches ? 14 : BOARD.pad);
+    update(mq.matches);
+    const handler = (e: MediaQueryListEvent) => update(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
   const boardPx = cellPx * gridSize;
   const coordsSpace = showCoords ? 22 : 0;
   const viewW = boardPx + pad * 2 + coordsSpace;
@@ -42,6 +52,24 @@ export function Board({
     if (x < 0 || y < 0 || x > boardPx || y > boardPx) return;
     const c = Math.floor(x / cellPx), r = Math.floor(y / cellPx);
     if (r >= 0 && c >= 0 && r < gridSize && c < gridSize) onCellClick(r, c);
+  };
+
+  const svgCoordsFromTouch = (touch: React.Touch) => {
+    const svg = svgRef.current;
+    if (!svg) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = touch.clientX; pt.y = touch.clientY;
+    const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
+    const x = local.x - pad, y = local.y - pad;
+    if (x < 0 || y < 0 || x > boardPx || y > boardPx) return null;
+    const c = Math.floor(x / cellPx), r = Math.floor(y / cellPx);
+    if (r < 0 || c < 0 || r >= gridSize || c >= gridSize) return null;
+    return { r, c };
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    const pos = svgCoordsFromTouch(e.touches[0]);
+    onHover(pos);
   };
 
   const handleMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -68,6 +96,8 @@ export function Board({
       onClick={handleClick}
       onMouseMove={handleMove}
       onMouseLeave={() => onHover(null)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={() => onHover(null)}
       role="grid"
       aria-label={`${gridSize}×${gridSize} Amőba board`}
     >
