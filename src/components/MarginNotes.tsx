@@ -1,35 +1,20 @@
-import type { Aesthetic, Difficulty, GridSize } from '../tokens';
-import type { GameState } from '../game/useGame';
+import type { Aesthetic } from '../tokens';
 import type { SessionStats, PatternSettings } from '../game/usePatternStats';
-import { TurnIndicator } from './TurnIndicator';
-import { DifficultyPicker } from './DifficultyPicker';
-import { RoughButton } from './RoughButton';
 
 interface Props {
   theme: Aesthetic;
-  state: GameState;
-  gridSize: GridSize;
   sessionStats: SessionStats;
   settings: PatternSettings;
-  thinking: boolean;
-  difficulty: Difficulty;
-  onDifficulty: (d: Difficulty) => void;
-  onNewGame: () => void;
-  onUndo: () => void;
+  gameOpenThreesX: number;
   onTogglePatterns: () => void;
   onToggleReference: () => void;
-  onResetStats: () => void;
-  gameOpenThreesX: number;
 }
 
 export function MarginNotes({
-  theme, state, gridSize,
-  sessionStats, settings,
-  thinking, difficulty, onDifficulty, onNewGame, onUndo,
-  onTogglePatterns, onToggleReference, onResetStats,
-  gameOpenThreesX,
+  theme, sessionStats, settings, gameOpenThreesX,
+  onTogglePatterns, onToggleReference,
 }: Props) {
-  const { sessionWins, openThrees, fours, forks, blocked, gamesPlayed, xOpenThreesHistory } = sessionStats;
+  const { openThrees, fours, forks, blocked, gamesPlayed, xOpenThreesHistory } = sessionStats;
 
   const avgOT = xOpenThreesHistory.length > 0
     ? (xOpenThreesHistory.reduce((a, b) => a + b, 0) / xOpenThreesHistory.length).toFixed(1)
@@ -37,28 +22,8 @@ export function MarginNotes({
 
   return (
     <aside className="margin" style={{ color: theme.ui }}>
-      <div>
-        <h1>Amőba</h1>
-        <div className="sub">five in a row</div>
-      </div>
-
-      <TurnIndicator turn={state.turn} thinking={thinking} theme={theme} />
-
-      {/* ── Score ─────────────────────────────────────────────────── */}
-      <div className="note-block">
-        <div className="note-label">Score</div>
-        <div className="stats">
-          <div className="stat">
-            <div className="n">{sessionWins.X}</div>
-            <div className="l">X (you)</div>
-          </div>
-          <div className="stat">
-            <div className="n">{sessionWins.O}</div>
-            <div className="l">O (cpu)</div>
-          </div>
-        </div>
-
-        {/* ── Shape counters ───────────────────────────────────────── */}
+      <div className="note-block note-block--first">
+        <div className="note-label">Patterns</div>
         <div className="shape-stats">
           <div className="shape-row shape-row--header">
             <span />
@@ -87,7 +52,6 @@ export function MarginNotes({
           </div>
         </div>
 
-        {/* ── This game / avg ──────────────────────────────────────── */}
         {(gameOpenThreesX > 0 || gamesPlayed > 0) && (
           <div className="this-game-line">
             this game {gameOpenThreesX} open three{gameOpenThreesX !== 1 ? 's' : ''}
@@ -95,7 +59,6 @@ export function MarginNotes({
           </div>
         )}
 
-        {/* ── Show patterns toggle ─────────────────────────────────── */}
         <div className="patterns-toggle-row">
           <button
             className={`patterns-toggle ${settings.showPatterns ? 'on' : 'off'}`}
@@ -107,13 +70,12 @@ export function MarginNotes({
           </button>
         </div>
 
-        {/* ── What gets recognised? ────────────────────────────────── */}
         <button
           className="reference-toggle"
           onClick={onToggleReference}
           style={{ color: theme.ui }}
         >
-          {settings.referenceOpen ? '▲ ' : ''}What gets recognized?
+          {settings.referenceOpen ? '▲ ' : ''}what gets recognized?
         </button>
 
         {settings.referenceOpen && (
@@ -146,24 +108,6 @@ export function MarginNotes({
             </div>
           </div>
         )}
-      </div>
-
-      <DifficultyPicker difficulty={difficulty} onChange={onDifficulty} />
-
-      <div className="note-block">
-        <div className="note-label">Actions</div>
-        <div className="btn-row">
-          <RoughButton label="New game" onClick={onNewGame} color={theme.ui} w={120} h={38} />
-          <RoughButton label="Undo" onClick={onUndo} color={theme.ui} w={90} h={38} />
-        </div>
-      </div>
-
-      <div className="footer-note">
-        {theme.inkName} · {gridSize}×{gridSize} · v1.3
-        {'  '}
-        <button className="reset-stats-link" onClick={onResetStats} style={{ color: theme.ui }}>
-          reset stats
-        </button>
       </div>
     </aside>
   );

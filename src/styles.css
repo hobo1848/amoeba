@@ -37,34 +37,147 @@ body {
   .page-inner { grid-template-columns: 1fr; }
 }
 
-.board-wrap { position: relative; user-select: none; touch-action: manipulation; }
+/* ── Board column layout ─────────────────────────────────────────── */
+.board-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
 
-.board-new-game {
-  display: none;
-  background: none;
-  border: none;
-  cursor: pointer;
+/* Above-board header */
+.board-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+}
+.board-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.board-title {
+  margin: 0;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 36px;
+  line-height: 1;
+}
+.board-mode-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.board-header-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* Compact turn indicator (used in board header) */
+.turn-compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.turn-compact-text {
   font-family: 'Caveat', cursive;
   font-size: 18px;
+  line-height: 1;
+}
+
+/* Compact score (used in board header) */
+.score-compact {
+  display: flex;
+  gap: 14px;
+}
+.score-compact-item .sc-n {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1;
+}
+.score-compact-item .sc-l {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
   opacity: 0.55;
-  padding: 6px 0 2px;
-  width: 100%;
-  text-align: center;
-  letter-spacing: 0.05em;
 }
-.board-new-game:hover { opacity: 0.85; }
-@media (min-width: 601px) and (max-width: 980px) {
-  .board-new-game { display: block; }
+
+/* Below-board footer */
+.board-footer {
+  padding-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
+.board-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+.footer-diff-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.footer-diff {
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.4;
+  padding: 3px 8px;
+  line-height: 1;
+  position: relative;
+}
+.footer-diff.active { opacity: 0.85; }
+.footer-diff.active::after {
+  content: "";
+  position: absolute;
+  left: 6px; right: 6px; bottom: 1px;
+  height: 1.5px;
+  background: currentColor;
+  border-radius: 2px;
+  opacity: 0.5;
+}
+.footer-diff:hover { opacity: 0.7; }
+.footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.footer-action-btn {
+  background: transparent;
+  border: 0;
+  font-family: 'Caveat', cursive;
+  font-size: 17px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  padding: 2px 0;
+  line-height: 1;
+}
+.footer-action-btn:hover { opacity: 0.85; }
+
+.board-wrap { position: relative; user-select: none; touch-action: manipulation; }
+
 .board-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
 
-.margin { display: flex; flex-direction: column; gap: 18px; padding-top: 6px; }
-.margin h1 { margin: 0; font-family: 'Caveat', cursive; font-weight: 700; font-size: 42px; line-height: 1; }
-.margin .sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; margin-top: 4px; opacity: 0.55; }
+/* ── Sidebar (stats panel) ───────────────────────────────────────── */
+.margin { display: flex; flex-direction: column; gap: 18px; }
 
 .note-block { padding: 10px 0; border-top: 1px dashed rgba(0,0,0,0.15); }
+.note-block--first { border-top: none; padding-top: 0; }
 .note-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; margin-bottom: 6px; }
 
+/* Legacy turn/score styles kept for potential reuse */
 .turn-row { display: flex; align-items: center; gap: 14px; }
 .turn-chip { width: 42px; height: 42px; display: grid; place-items: center; }
 .turn-text { font-family: 'Caveat', cursive; font-size: 26px; line-height: 1; }
@@ -72,46 +185,6 @@ body {
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .stat .n { font-size: 22px; font-weight: 600; }
 .stat .l { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; }
-
-.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
-.pbtn {
-  position: relative;
-  background: transparent;
-  border: 0;
-  padding: 8px 14px 10px;
-  font-family: 'Caveat', cursive;
-  font-size: 20px;
-  color: inherit;
-  cursor: pointer;
-  line-height: 1;
-}
-.pbtn svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.pbtn span { position: relative; }
-.pbtn:hover { transform: translateY(-1px); }
-
-.diff-row { display: flex; gap: 6px; flex-wrap: wrap; }
-.diff {
-  font-family: 'Caveat', cursive;
-  font-size: 20px;
-  padding: 4px 10px;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.55;
-  line-height: 1;
-  position: relative;
-}
-.diff.active { opacity: 1; }
-.diff.active::after {
-  content: "";
-  position: absolute;
-  left: 8px; right: 8px; bottom: 2px;
-  height: 2px;
-  background: currentColor;
-  border-radius: 2px;
-  opacity: 0.6;
-}
 
 .footer-note { font-size: 10px; opacity: 0.45; letter-spacing: 0.1em; }
 
@@ -209,19 +282,13 @@ body {
   .app, .banner { animation: none; transition: none; }
 }
 
-/* ── Mode toggle bar ─────────────────────────────────────────── */
-.mode-toggle-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 32px 0;
-  font-family: 'Caveat', cursive;
-}
+/* ── Mode buttons (used inside .board-mode-selector) ────────────── */
 .mode-sep {
   font-size: 20px;
   line-height: 1;
   pointer-events: none;
   user-select: none;
+  font-family: 'Caveat', cursive;
 }
 .mode-btn {
   background: transparent;
@@ -250,13 +317,7 @@ body {
 .mode-btn:hover { opacity: 0.85; }
 .mode-btn--active:hover { opacity: 1; }
 
-@media (max-width: 600px) {
-  .mode-toggle-bar { padding: 8px 8px 0; gap: 8px; }
-  .mode-btn { font-size: 18px; }
-}
-
-
-/* ── Mobile: maximise grid real estate ───────────────────────── */
+/* ── Mobile ──────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
   .app {
     padding: 0;
@@ -270,57 +331,36 @@ body {
   .page::before { display: none; }
   .page-inner {
     padding: 8px 8px 16px;
-    gap: 8px;
+    gap: 12px;
   }
 
-  /* Compact sidebar into a horizontal strip below the board */
-  .margin {
-    flex-direction: row;
+  /* Compact board header on small screens */
+  .board-header {
     flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 16px;
-    padding-top: 0;
+    padding-bottom: 8px;
+    gap: 6px;
   }
-  /* Title spans full width at the top of the strip */
-  .margin > div:first-child {
-    flex-basis: 100%;
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-  }
-  .margin h1 { font-size: 22px; }
-  .margin .sub { margin-top: 0; font-size: 9px; }
+  .board-title { font-size: 26px; }
+  .mode-btn { font-size: 18px; }
+  .board-header-right { gap: 12px; }
+  .turn-compact-text { font-size: 15px; }
+  .score-compact-item .sc-n { font-size: 15px; }
+
+  /* Compact board footer */
+  .board-footer { gap: 4px; padding-top: 8px; }
+  .footer-diff { font-size: 15px; padding: 2px 6px; }
+  .footer-action-btn { font-size: 15px; }
   .footer-note { display: none; }
 
-  /* Remove note-block dividers and labels to save vertical space */
-  .note-block { padding: 0; border-top: none; }
-  .note-label { display: none; }
-
-  /* Compact score grid to a single row */
-  .stats { grid-template-columns: repeat(4, auto); gap: 4px 12px; }
-  .stat .n { font-size: 15px; }
-  .stat .l { font-size: 8px; }
-
-  /* Smaller turn indicator */
-  .turn-row { gap: 8px; }
-  .turn-chip { width: 30px; height: 30px; }
-  .turn-text { font-size: 16px; }
-
-  /* Compact difficulty + action buttons */
-  .diff { font-size: 16px; padding: 3px 8px; }
-  .pbtn { font-size: 16px; padding: 6px 12px 8px; }
-  .btn-row { gap: 8px; }
-
-  /* Win banner: keep visible on small screen */
-  .banner { font-size: 18px; padding: 5px 12px 6px; }
-
-  /* Shape stats: hide labels on tiny screens, just show numbers */
-  .shape-row { font-size: 9px; }
-  .shape-label { font-size: 8px; }
-  .this-game-line { font-size: 8px; }
+  /* Sidebar stats compact */
+  .margin { gap: 8px; }
+  .note-block { padding: 8px 0; }
+  .note-block--first { padding-top: 0; }
+  .shape-label { font-size: 10px; }
+  .shape-val { font-size: 14px; }
 }
 
-/* ── Pattern recognition styles ─────────────────────────────────────────── */
+/* ── Pattern recognition styles ─────────────────────────────────── */
 
 @keyframes patternFadeIn {
   from { opacity: 0; }
@@ -332,11 +372,11 @@ body {
   margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr auto auto;
-  gap: 3px 10px;
+  gap: 4px 10px;
   align-items: baseline;
 }
 .shape-row--header .shape-col-head {
-  font-size: 9px;
+  font-size: 10px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   opacity: 0.55;
@@ -344,16 +384,16 @@ body {
 }
 .shape-row {
   display: contents;
-  font-size: 10px;
+  font-size: 11px;
 }
 .shape-label {
-  font-size: 10px;
-  letter-spacing: 0.12em;
+  font-size: 11px;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   opacity: 0.55;
 }
 .shape-val {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 600;
   text-align: right;
   font-family: 'Caveat', cursive;
@@ -368,7 +408,7 @@ body {
   opacity: 0.60;
 }
 
-/* Show patterns toggle — same style as diff buttons */
+/* Show patterns toggle */
 .patterns-toggle-row {
   margin-top: 10px;
 }
@@ -448,7 +488,7 @@ body {
   letter-spacing: 0.08em;
 }
 
-/* Reset stats link in footer */
+/* Reset stats link */
 .reset-stats-link {
   background: transparent;
   border: 0;

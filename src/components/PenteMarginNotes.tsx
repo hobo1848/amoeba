@@ -1,39 +1,28 @@
-import type { Aesthetic, Difficulty } from '../tokens';
+import type { Aesthetic } from '../tokens';
 import type { PenteState } from '../game/usePente';
 import type { SessionStats, PatternSettings } from '../game/usePatternStats';
-import { TurnIndicator } from './TurnIndicator';
-import { DifficultyPicker } from './DifficultyPicker';
-import { RoughButton } from './RoughButton';
 
 interface Props {
   theme: Aesthetic;
   penteState: PenteState;
   sessionStats: SessionStats;
   settings: PatternSettings;
-  thinking: boolean;
-  difficulty: Difficulty;
   threatsX: number;
   threatsO: number;
   vulnX: number;
   vulnO: number;
   gameOpenThreesX: number;
-  onDifficulty: (d: Difficulty) => void;
-  onNewGame: () => void;
-  onUndo: () => void;
   onTogglePatterns: () => void;
   onToggleReference: () => void;
-  onResetStats: () => void;
 }
 
 export function PenteMarginNotes({
   theme, penteState, sessionStats, settings,
-  thinking, difficulty, onDifficulty,
-  onNewGame, onUndo,
-  onTogglePatterns, onToggleReference, onResetStats,
+  onTogglePatterns, onToggleReference,
   threatsX, threatsO, vulnX, vulnO,
   gameOpenThreesX,
 }: Props) {
-  const { sessionWins, openThrees, fours, forks, blocked, gamesPlayed, xOpenThreesHistory } = sessionStats;
+  const { openThrees, fours, forks, blocked, gamesPlayed, xOpenThreesHistory } = sessionStats;
 
   const avgOT = xOpenThreesHistory.length > 0
     ? (xOpenThreesHistory.reduce((a, b) => a + b, 0) / xOpenThreesHistory.length).toFixed(1)
@@ -41,30 +30,9 @@ export function PenteMarginNotes({
 
   return (
     <aside className="margin" style={{ color: theme.ui }}>
-      <div>
-        <h1>Amőba</h1>
-        <div className="sub">pente</div>
-      </div>
 
-      <TurnIndicator turn={penteState.turn} thinking={thinking} theme={theme} />
-
-      {/* ── Score ─────────────────────────────────────────────────── */}
-      <div className="note-block">
-        <div className="note-label">Score</div>
-        <div className="stats">
-          <div className="stat">
-            <div className="n">{sessionWins.X}</div>
-            <div className="l">X (you)</div>
-          </div>
-          <div className="stat">
-            <div className="n">{sessionWins.O}</div>
-            <div className="l">O (cpu)</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Pente captures ────────────────────────────────────────── */}
-      <div className="note-block">
+      {/* ── Captures ──────────────────────────────────────────────── */}
+      <div className="note-block note-block--first">
         <div className="note-label">Captures</div>
         <div className="shape-stats">
           <div className="shape-row shape-row--header">
@@ -90,7 +58,7 @@ export function PenteMarginNotes({
         </div>
       </div>
 
-      {/* ── Pattern stats ─────────────────────────────────────────── */}
+      {/* ── Patterns ──────────────────────────────────────────────── */}
       <div className="note-block">
         <div className="note-label">Patterns</div>
         <div className="shape-stats">
@@ -144,7 +112,7 @@ export function PenteMarginNotes({
           onClick={onToggleReference}
           style={{ color: theme.ui }}
         >
-          {settings.referenceOpen ? '▲ ' : ''}What gets recognized?
+          {settings.referenceOpen ? '▲ ' : ''}what gets recognized?
         </button>
 
         {settings.referenceOpen && (
@@ -170,24 +138,6 @@ export function PenteMarginNotes({
             </div>
           </div>
         )}
-      </div>
-
-      <DifficultyPicker difficulty={difficulty} onChange={onDifficulty} />
-
-      <div className="note-block">
-        <div className="note-label">Actions</div>
-        <div className="btn-row">
-          <RoughButton label="New game" onClick={onNewGame} color={theme.ui} w={120} h={38} />
-          <RoughButton label="Undo" onClick={onUndo} color={theme.ui} w={90} h={38} />
-        </div>
-      </div>
-
-      <div className="footer-note">
-        {theme.inkName} · 15×15 · v1.3
-        {'  '}
-        <button className="reset-stats-link" onClick={onResetStats} style={{ color: theme.ui }}>
-          reset stats
-        </button>
       </div>
     </aside>
   );

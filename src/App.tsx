@@ -13,6 +13,7 @@ import { Tweaks, type TweakState } from './components/Tweaks';
 import { WinBanner } from './components/WinBanner';
 import { PenteWinBanner } from './components/PenteWinBanner';
 import { CaptureOverlay } from './components/CaptureOverlay';
+import { TurnIndicator } from './components/TurnIndicator';
 import { BOARD } from './tokens';
 import type { GameState } from './game/useGame';
 
@@ -25,6 +26,8 @@ const DEFAULT_TWEAKS: TweakState = {
   paperTexture: true,
   showCoords: false,
 };
+
+const DIFFICULTY_LEVELS: Difficulty[] = ['easy', 'medium', 'hard'];
 
 export function App() {
   const [tweaks, setTweaks] = useState<TweakState>(DEFAULT_TWEAKS);
@@ -153,7 +156,6 @@ export function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, penteState.turn, penteState.win, penteState.board, difficulty]);
 
-  // Capture stats computed once per render (board changes are the trigger)
   const penteThreats = useMemo(() => ({
     X: countThreats(penteState.board, 'X').count,
     O: countThreats(penteState.board, 'O').count,
@@ -167,8 +169,6 @@ export function App() {
   const penteThreatsX = useMemo(() => countThreats(penteState.board, 'X').cells, [penteState.board]);
   const penteThreatsO = useMemo(() => countThreats(penteState.board, 'O').cells, [penteState.board]);
 
-  // Board adapter: maps PenteState into GameState shape Board expects.
-  // Line-wins pass the line; capture-wins pass win=null (no board decoration).
   const penteBoardState = useMemo((): GameState => ({
     board: penteState.board,
     turn: penteState.turn,
@@ -197,30 +197,69 @@ export function App() {
   return (
     <div className="app" style={{ color: theme.ui }}>
       <div className="page" style={{ background: theme.paper }}>
-
-        {/* ── Mode toggle ─────────────────────────────────────────── */}
-        <div className="mode-toggle-bar" style={{ color: theme.ui }}>
-          <button
-            className={`mode-btn${mode === 'gomoku' ? ' mode-btn--active' : ''}`}
-            onClick={() => switchMode('gomoku')}
-            style={{ color: theme.ui }}
-          >
-            5-in-a-row
-          </button>
-          <span className="mode-sep" style={{ opacity: 0.35 }}>|</span>
-          <button
-            className={`mode-btn${mode === 'pente' ? ' mode-btn--active' : ''}`}
-            onClick={() => switchMode('pente')}
-            style={{ color: theme.ui }}
-          >
-            Pente
-          </button>
-        </div>
-
         <div className="page-inner">
-          {/* ── Gomoku ────────────────────────────────────────────── */}
-          {mode === 'gomoku' && (
-            <>
+
+          {/* ── Board column ──────────────────────────────────────────── */}
+          <div className="board-col">
+
+            {/* ── Above-board header ── */}
+            <div className="board-header" style={{ color: theme.ui }}>
+              <div className="board-header-left">
+                <h1 className="board-title">Amőba</h1>
+                <div className="board-mode-selector">
+                  <button
+                    className={`mode-btn${mode === 'gomoku' ? ' mode-btn--active' : ''}`}
+                    onClick={() => switchMode('gomoku')}
+                    style={{ color: theme.ui }}
+                  >
+                    5-in-a-row
+                  </button>
+                  <span className="mode-sep" style={{ opacity: 0.35 }}>|</span>
+                  <button
+                    className={`mode-btn${mode === 'pente' ? ' mode-btn--active' : ''}`}
+                    onClick={() => switchMode('pente')}
+                    style={{ color: theme.ui }}
+                  >
+                    Pente
+                  </button>
+                </div>
+              </div>
+              <div className="board-header-right">
+                {mode === 'gomoku' && (
+                  <>
+                    <TurnIndicator turn={state.turn} thinking={thinking} theme={theme} compact />
+                    <div className="score-compact">
+                      <div className="score-compact-item">
+                        <div className="sc-n">{sessionStats.sessionWins.X}</div>
+                        <div className="sc-l">X (you)</div>
+                      </div>
+                      <div className="score-compact-item">
+                        <div className="sc-n">{sessionStats.sessionWins.O}</div>
+                        <div className="sc-l">O (cpu)</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+                {mode === 'pente' && (
+                  <>
+                    <TurnIndicator turn={penteState.turn} thinking={penteThinking} theme={theme} compact />
+                    <div className="score-compact">
+                      <div className="score-compact-item">
+                        <div className="sc-n">{penteSessionStats.sessionWins.X}</div>
+                        <div className="sc-l">X (you)</div>
+                      </div>
+                      <div className="score-compact-item">
+                        <div className="sc-n">{penteSessionStats.sessionWins.O}</div>
+                        <div className="sc-l">O (cpu)</div>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* ── Board ── */}
+            {mode === 'gomoku' && (
               <div className="board-wrap">
                 <WinBanner win={state.win} theme={theme} />
                 <Board
@@ -239,31 +278,9 @@ export function App() {
                   showPatterns={settings.showPatterns}
                   outlineVariant={outlineVariant}
                 />
-                <button className="board-new-game" onClick={newGame} style={{ color: theme.ui }}>new game</button>
               </div>
-
-              <MarginNotes
-                theme={theme}
-                state={state}
-                gridSize={gridSize as GridSize}
-                sessionStats={sessionStats}
-                settings={settings}
-                thinking={thinking}
-                difficulty={difficulty}
-                onDifficulty={setDifficulty}
-                onNewGame={newGame}
-                onUndo={undo}
-                onTogglePatterns={toggleShowPatterns}
-                onToggleReference={toggleReference}
-                onResetStats={resetStats}
-                gameOpenThreesX={gameOpenThreesX}
-              />
-            </>
-          )}
-
-          {/* ── Pente ─────────────────────────────────────────────── */}
-          {mode === 'pente' && (
-            <>
+            )}
+            {mode === 'pente' && (
               <div className="board-wrap">
                 <PenteWinBanner win={penteState.win} theme={theme} />
                 <Board
@@ -293,29 +310,80 @@ export function App() {
                     />
                   }
                 />
-                <button className="board-new-game" onClick={penteNewGame} style={{ color: theme.ui }}>new game</button>
               </div>
+            )}
 
-              <PenteMarginNotes
-                theme={theme}
-                penteState={penteState}
-                sessionStats={penteSessionStats}
-                settings={penteSettings}
-                thinking={penteThinking}
-                difficulty={difficulty}
-                threatsX={penteThreats.X}
-                threatsO={penteThreats.O}
-                vulnX={penteVuln.pairsX.length}
-                vulnO={penteVuln.pairsO.length}
-                gameOpenThreesX={penteGameOpenThreesX}
-                onDifficulty={setDifficulty}
-                onNewGame={penteNewGame}
-                onUndo={penteUndo}
-                onTogglePatterns={penteToggleShowPatterns}
-                onToggleReference={penteToggleReference}
-                onResetStats={penteResetStats}
-              />
-            </>
+            {/* ── Below-board footer ── */}
+            <div className="board-footer" style={{ color: theme.ui }}>
+              <div className="board-footer-row">
+                <div className="footer-diff-row">
+                  {DIFFICULTY_LEVELS.map(d => (
+                    <button
+                      key={d}
+                      className={`footer-diff${difficulty === d ? ' active' : ''}`}
+                      onClick={() => setDifficulty(d)}
+                      style={{ color: theme.ui }}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                </div>
+                <div className="footer-actions">
+                  <button
+                    className="footer-action-btn"
+                    onClick={mode === 'gomoku' ? newGame : penteNewGame}
+                    style={{ color: theme.ui }}
+                  >
+                    new game
+                  </button>
+                  <button
+                    className="footer-action-btn"
+                    onClick={mode === 'gomoku' ? undo : penteUndo}
+                    style={{ color: theme.ui }}
+                  >
+                    undo
+                  </button>
+                </div>
+              </div>
+              <div className="footer-note" style={{ color: theme.ui }}>
+                {theme.inkName} · {mode === 'gomoku' ? `${gridSize}×${gridSize}` : '15×15'} · v1.3
+                {'  '}
+                <button
+                  className="reset-stats-link"
+                  onClick={mode === 'gomoku' ? resetStats : penteResetStats}
+                  style={{ color: theme.ui }}
+                >
+                  reset stats
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Sidebar (stats only) ──────────────────────────────────── */}
+          {mode === 'gomoku' && (
+            <MarginNotes
+              theme={theme}
+              sessionStats={sessionStats}
+              settings={settings}
+              gameOpenThreesX={gameOpenThreesX}
+              onTogglePatterns={toggleShowPatterns}
+              onToggleReference={toggleReference}
+            />
+          )}
+          {mode === 'pente' && (
+            <PenteMarginNotes
+              theme={theme}
+              penteState={penteState}
+              sessionStats={penteSessionStats}
+              settings={penteSettings}
+              threatsX={penteThreats.X}
+              threatsO={penteThreats.O}
+              vulnX={penteVuln.pairsX.length}
+              vulnO={penteVuln.pairsO.length}
+              gameOpenThreesX={penteGameOpenThreesX}
+              onTogglePatterns={penteToggleShowPatterns}
+              onToggleReference={penteToggleReference}
+            />
           )}
         </div>
       </div>

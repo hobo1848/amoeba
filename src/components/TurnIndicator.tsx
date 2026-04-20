@@ -35,9 +35,20 @@ interface Props {
   turn: Player;
   thinking: boolean;
   theme: Aesthetic;
+  compact?: boolean;
 }
 
-export function TurnIndicator({ turn, thinking, theme }: Props) {
+export function TurnIndicator({ turn, thinking, theme, compact }: Props) {
+  if (compact) {
+    return (
+      <div className="turn-compact">
+        <MarkChip kind={turn} theme={theme} size={26} />
+        <div className="turn-compact-text">
+          {turn === 'X' ? 'Your move' : (thinking ? 'Thinking…' : 'Opponent')}
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="note-block">
       <div className="note-label">Turn</div>
