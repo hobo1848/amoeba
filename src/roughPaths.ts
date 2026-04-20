@@ -86,6 +86,37 @@ export function winStrikePaths(
   ));
 }
 
+export function patternOvalPaths(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  halfWidth: number,
+  color: string,
+  strokeWidth: number,
+  seed: number,
+  strokeLineDash?: [number, number],
+): { d: string }[] {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  const len = Math.hypot(dx, dy) || 1;
+  const ux = dx / len, uy = dy / len;
+  const nx = -uy, ny = ux;
+  const e = halfWidth;
+  const verts: [number, number][] = [
+    [a.x + nx * e - ux * e, a.y + ny * e - uy * e],
+    [b.x + nx * e + ux * e, b.y + ny * e + uy * e],
+    [b.x - nx * e + ux * e, b.y - ny * e + uy * e],
+    [a.x - nx * e - ux * e, a.y - ny * e - uy * e],
+    [a.x + nx * e - ux * e, a.y + ny * e - uy * e],
+  ];
+  return extract(gen.curve(verts, {
+    stroke: color,
+    strokeWidth,
+    roughness: 1.0,
+    bowing: 1.5,
+    seed,
+    strokeLineDash,
+  }));
+}
+
 export function gridRectOpts(color: string) {
   return { stroke: color, strokeWidth: 1.2, roughness: 0.8, bowing: 0.8, seed: 11, fill: 'none' };
 }
