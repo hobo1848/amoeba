@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { AESTHETICS, TIMINGS, type Difficulty, type GridSize } from './tokens';
+import { AESTHETICS, TIMINGS, type Difficulty } from './tokens';
 import { useGame } from './game/useGame';
 import { usePatternStats } from './game/usePatternStats';
 import { aiMove } from './game/aiMove';
