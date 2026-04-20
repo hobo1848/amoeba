@@ -10,11 +10,13 @@ interface Props {
   blockedAnim: BlockedThreatAnim | null;
   cellPx: number;
   pad: number;
+  offsetX?: number;
+  offsetY?: number;
   theme: Aesthetic;
   variant: OutlineVariant;
 }
 
-export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pad, theme, variant }: Props) {
+export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pad, offsetX = 0, offsetY = 0, theme, variant }: Props) {
   const gRef = useRef<SVGGElement>(null);
 
   useLayoutEffect(() => {
@@ -22,17 +24,17 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
     if (!g) return;
     g.innerHTML = '';
 
+    const cellCenter = (r: number, c: number) => ({
+      x: pad + offsetX + c * cellPx + cellPx / 2,
+      y: pad + offsetY + r * cellPx + cellPx / 2,
+    });
+
     for (const shape of shapes) {
       const isFork = forkShapeKeys.has(shape.key);
       const strokeW = isFork ? 1.2 : 0.8;
       const color = shape.player === 'X' ? theme.x : theme.o;
       const first = shape.cells[0];
       const last = shape.cells[shape.cells.length - 1];
-
-      const cellCenter = (r: number, c: number) => ({
-        x: pad + c * cellPx + cellPx / 2,
-        y: pad + r * cellPx + cellPx / 2,
-      });
 
       const a = cellCenter(first.row, first.col);
       const b = cellCenter(last.row, last.col);
@@ -61,8 +63,8 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
 
     // Blocked-threat slash.
     if (blockedAnim && blockedAnim.opacity > 0) {
-      const cx = pad + blockedAnim.col * cellPx + cellPx / 2;
-      const cy = pad + blockedAnim.row * cellPx + cellPx / 2;
+      const cx = pad + offsetX + blockedAnim.col * cellPx + cellPx / 2;
+      const cy = pad + offsetY + blockedAnim.row * cellPx + cellPx / 2;
       const slashHalf = cellPx * 0.28;
       const color = blockedAnim.player === 'X' ? theme.x : theme.o;
 
@@ -93,7 +95,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
         g.appendChild(el);
       }
     }
-  }, [shapes, forkShapeKeys, blockedAnim, cellPx, pad, theme, variant]);
+  }, [shapes, forkShapeKeys, blockedAnim, cellPx, pad, offsetX, offsetY, theme, variant]);
 
   return <g ref={gRef} />;
 }
