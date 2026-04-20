@@ -13,13 +13,14 @@ interface Props {
 }
 
 export function TerritoryOverlay({
-  territory, boardSize, cellPx, pad, boardOffsetX, boardOffsetY, theme, show,
+  territory, boardSize: _boardSize, cellPx, pad, boardOffsetX, boardOffsetY, theme, show,
 }: Props) {
   if (!show) return null;
 
   const rects: React.ReactElement[] = [];
-  for (let r = 0; r < boardSize; r++) {
-    for (let c = 0; c < boardSize; c++) {
+  const n = territory.cells.length;
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
       const owner = territory.cells[r][c];
       if (owner !== 'X' && owner !== 'O') continue;
       const fill = owner === 'X' ? theme.x : theme.o;
