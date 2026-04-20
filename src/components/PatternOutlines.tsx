@@ -35,11 +35,17 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
       const last = shape.cells[shape.cells.length - 1];
 
       const margin = cellPx * 0.08;
-      const halfCell = cellPx / 2;
-      const x1 = pad + first.col * cellPx + halfCell - halfCell + margin;
-      const y1 = pad + first.row * cellPx + halfCell - halfCell + margin;
-      const x2 = pad + last.col * cellPx + halfCell + halfCell - margin;
-      const y2 = pad + last.row * cellPx + halfCell + halfCell - margin;
+      // Use min/max so the bounding box is always axis-aligned regardless of
+      // direction — the [1,-1] anti-diagonal has first.col > last.col, which
+      // would produce negative width without this.
+      const minCol = Math.min(first.col, last.col);
+      const maxCol = Math.max(first.col, last.col);
+      const minRow = Math.min(first.row, last.row);
+      const maxRow = Math.max(first.row, last.row);
+      const x1 = pad + minCol * cellPx + margin;
+      const y1 = pad + minRow * cellPx + margin;
+      const x2 = pad + maxCol * cellPx + cellPx - margin;
+      const y2 = pad + maxRow * cellPx + cellPx - margin;
 
       const w = x2 - x1;
       const h = y2 - y1;
