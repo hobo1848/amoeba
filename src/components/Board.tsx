@@ -29,8 +29,8 @@ interface Props {
   blockedAnim?: BlockedThreatAnim | null;
   showPatterns?: boolean;
   outlineVariant?: OutlineVariant;
-  /** Extra SVG content rendered above marks (e.g. territory overlay) */
-  overlayContent?: React.ReactNode;
+  /** Extra SVG content rendered above marks (e.g. territory overlay). Receives computed pad so overlays can align correctly on mobile. */
+  overlayContent?: (pad: number) => React.ReactNode;
 }
 
 export function Board({
@@ -156,7 +156,7 @@ export function Board({
         svgEl={svgRef.current}
       />
 
-      {overlayContent}
+      {overlayContent?.(pad)}
 
       {canPlace && (
         <g opacity="0.28" pointerEvents="none">

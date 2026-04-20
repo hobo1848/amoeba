@@ -298,17 +298,17 @@ export function App() {
                   blockedAnim={penteBlockedAnim}
                   showPatterns={penteSettings.showPatterns}
                   outlineVariant={penteOutlineVariant}
-                  overlayContent={
+                  overlayContent={(pad) => (
                     <CaptureOverlay
                       vulnPairs={[...penteVuln.pairsX, ...penteVuln.pairsO]}
                       threatCellsX={penteThreatsX}
                       threatCellsO={penteThreatsO}
                       cellPx={penteCellPx}
-                      pad={BOARD.pad}
+                      pad={pad}
                       theme={theme}
                       show={penteSettings.showPatterns}
                     />
-                  }
+                  )}
                 />
               </div>
             )}
