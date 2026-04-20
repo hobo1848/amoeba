@@ -35,28 +35,13 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
       const last = shape.cells[shape.cells.length - 1];
 
       const margin = cellPx * 0.08;
-      // Use min/max so the bounding box is always axis-aligned regardless of
-      // direction — the [1,-1] anti-diagonal has first.col > last.col, which
-      // would produce negative width without this.
-      const minCol = Math.min(first.col, last.col);
-      const maxCol = Math.max(first.col, last.col);
-      const minRow = Math.min(first.row, last.row);
-      const maxRow = Math.max(first.row, last.row);
-      const x1 = pad + minCol * cellPx + margin;
-      const y1 = pad + minRow * cellPx + margin;
-      const x2 = pad + maxCol * cellPx + cellPx - margin;
-      const y2 = pad + maxRow * cellPx + cellPx - margin;
-
-      const w = x2 - x1;
-      const h = y2 - y1;
-
       const seed = seedFor(first.row, first.col, shape.dir[0] * 7 + shape.dir[1]);
 
       // Dashes for variant A O-shapes; opacity for variant B O-shapes.
       const strokeLineDash: [number, number] | undefined =
         variant === 'A' && shape.player === 'O' ? [5, 4] : undefined;
 
-      const node = rc.rectangle(x1, y1, w, h, {
+      const opts = {
         stroke: color,
         strokeWidth: strokeW,
         fill: 'none',
@@ -64,7 +49,35 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
         bowing: 0.6,
         seed,
         strokeLineDash,
-      });
+      };
+
+      const [dr, dc] = shape.dir;
+      const isDiagonal = dr !== 0 && dc !== 0;
+      let node: Element;
+
+      if (isDiagonal) {
+        // Tight parallelogram: TL/TR of first cell, BR/BL of last cell.
+        const fx = pad + first.col * cellPx;
+        const fy = pad + first.row * cellPx;
+        const lx = pad + last.col * cellPx;
+        const ly = pad + last.row * cellPx;
+        node = rc.polygon([
+          [fx + margin,          fy + margin],
+          [fx + cellPx - margin, fy + margin],
+          [lx + cellPx - margin, ly + cellPx - margin],
+          [lx + margin,          ly + cellPx - margin],
+        ], opts);
+      } else {
+        const minCol = Math.min(first.col, last.col);
+        const maxCol = Math.max(first.col, last.col);
+        const minRow = Math.min(first.row, last.row);
+        const maxRow = Math.max(first.row, last.row);
+        const x1 = pad + minCol * cellPx + margin;
+        const y1 = pad + minRow * cellPx + margin;
+        const w = (maxCol - minCol + 1) * cellPx - 2 * margin;
+        const h = (maxRow - minRow + 1) * cellPx - 2 * margin;
+        node = rc.rectangle(x1, y1, w, h, opts);
+      }
 
       if (variant === 'B' && shape.player === 'O') {
         node.setAttribute('opacity', '0.6');
