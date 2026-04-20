@@ -110,9 +110,10 @@ export function patternOvalPaths(
   return extract(gen.curve(verts, {
     stroke: color,
     strokeWidth,
-    roughness: 1.0,
+    roughness: 0,
     bowing: 1.5,
     seed,
+    disableMultiStroke: true,
     strokeLineDash,
   }));
 }

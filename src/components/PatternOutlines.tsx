@@ -24,7 +24,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
 
     for (const shape of shapes) {
       const isFork = forkShapeKeys.has(shape.key);
-      const strokeW = isFork ? 1.8 : 1.1;
+      const strokeW = isFork ? 1.2 : 0.8;
       const color = shape.player === 'X' ? theme.x : theme.o;
       const first = shape.cells[0];
       const last = shape.cells[shape.cells.length - 1];
@@ -53,7 +53,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
         el.setAttribute('stroke-linecap', 'round');
         el.setAttribute('stroke-linejoin', 'round');
         if (strokeLineDash) el.setAttribute('stroke-dasharray', strokeLineDash.join(' '));
-        if (variant === 'B' && shape.player === 'O') el.setAttribute('opacity', '0.6');
+        el.setAttribute('opacity', variant === 'B' && shape.player === 'O' ? '0.3' : '0.45');
         el.style.animation = 'patternFadeIn 300ms ease both';
         g.appendChild(el);
       }
