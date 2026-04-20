@@ -66,7 +66,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
           [fx + cellPx - margin, fy + margin],
           [lx + cellPx - margin, ly + cellPx - margin],
           [lx + margin,          ly + cellPx - margin],
-        ], opts);
+        ], opts) as SVGElement;
       } else {
         const minCol = Math.min(first.col, last.col);
         const maxCol = Math.max(first.col, last.col);
@@ -76,7 +76,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
         const y1 = pad + minRow * cellPx + margin;
         const w = (maxCol - minCol + 1) * cellPx - 2 * margin;
         const h = (maxRow - minRow + 1) * cellPx - 2 * margin;
-        node = rc.rectangle(x1, y1, w, h, opts);
+        node = rc.rectangle(x1, y1, w, h, opts) as SVGElement;
       }
 
       if (variant === 'B' && shape.player === 'O') {
