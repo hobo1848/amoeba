@@ -50,7 +50,7 @@ export function TurnIndicator({ turn, thinking, theme }: Props) {
             {turn === 'X' ? 'Your move' : (thinking ? 'Thinking…' : 'Opponent')}
           </div>
           <div style={{ fontSize: 10, opacity: 0.55, letterSpacing: '0.1em', marginTop: 2 }}>
-            {turn === 'X' ? 'Place an X' : 'Gép gondolkodik'}
+            {turn === 'X' ? 'Place an X' : 'CPU is thinking'}
           </div>
         </div>
       </div>

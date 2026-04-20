@@ -10,7 +10,7 @@ export function WinBanner({ win, theme }: Props) {
   if (!win) return null;
   return (
     <div className="banner show" style={{ color: theme.ui }}>
-      {win.player === 'X' ? 'Nyertél! (X)' : 'Gép nyert! (O)'}
+      {win.player === 'X' ? 'You won! (X)' : 'CPU won! (O)'}
     </div>
   );
 }

@@ -39,7 +39,7 @@ export function MarginNotes({
     <aside className="margin" style={{ color: theme.ui }}>
       <div>
         <h1>Amőba</h1>
-        <div className="sub">öt-öt · five in a row</div>
+        <div className="sub">five in a row</div>
       </div>
 
       <TurnIndicator turn={state.turn} thinking={thinking} theme={theme} />
