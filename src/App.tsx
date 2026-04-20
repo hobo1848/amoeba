@@ -3,21 +3,20 @@ import { AESTHETICS, TIMINGS, type Difficulty, type GridSize } from './tokens';
 import { useGame } from './game/useGame';
 import { usePatternStats } from './game/usePatternStats';
 import { aiMove } from './game/aiMove';
-import { useMoyo } from './game/useMoyo';
-import { moyoAiMove } from './game/moyoAI';
-import { moyoBoardSize, MOYO_MOVES_PER_SIDE } from './game/moyoLogic';
-import { detectMoyoPatterns } from './game/moyoPatterns';
+import { usePente } from './game/usePente';
+import { penteAiMove } from './game/penteAI';
+import { countThreats, findVulnerablePairs } from './game/pente';
 import { Board } from './components/Board';
 import { MarginNotes } from './components/MarginNotes';
-import { MoyoMarginNotes } from './components/MoyoMarginNotes';
+import { PenteMarginNotes } from './components/PenteMarginNotes';
 import { Tweaks, type TweakState } from './components/Tweaks';
 import { WinBanner } from './components/WinBanner';
-import { MoyoWinBanner } from './components/MoyoWinBanner';
-import { TerritoryOverlay } from './components/TerritoryOverlay';
+import { PenteWinBanner } from './components/PenteWinBanner';
+import { CaptureOverlay } from './components/CaptureOverlay';
 import { BOARD } from './tokens';
 import type { GameState } from './game/useGame';
 
-type AppMode = 'gomoku' | 'moyo';
+type AppMode = 'gomoku' | 'pente';
 
 const DEFAULT_TWEAKS: TweakState = {
   aesthetic: 'b',
@@ -84,85 +83,116 @@ export function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, state.turn, state.win, state.board, difficulty]);
 
-  // ── Moyo ──────────────────────────────────────────────────────────────────
-  const moyoBoardSz = moyoBoardSize(difficulty);
-  const { state: moyoState, place: moyoPlace, undo: moyoUndo, reset: moyoReset } = useMoyo(moyoBoardSz);
-  const [moyoHovered, setMoyoHovered] = useState<{ row: number; col: number } | null>(null);
-  const [moyoThinking, setMoyoThinking] = useState(false);
-  const [moyoShowPatterns, setMoyoShowPatterns] = useState(true);
-  const [moyoReferenceOpen, setMoyoReferenceOpen] = useState(false);
+  // ── Pente ─────────────────────────────────────────────────────────────────
+  const { state: penteState, place: pentePlace, undo: penteUndo, reset: penteReset } = usePente();
+  const [penteHovered, setPenteHovered] = useState<{ row: number; col: number } | null>(null);
+  const [penteThinking, setPenteThinking] = useState(false);
+  const [penteWinRecorded, setPenteWinRecorded] = useState(false);
 
-  const moyoPatterns = useMemo(
-    () => detectMoyoPatterns(moyoState.board, moyoState.territory),
-    [moyoState.board, moyoState.territory],
-  );
+  const {
+    sessionStats: penteSessionStats,
+    settings: penteSettings,
+    activeShapes: penteActiveShapes,
+    forkShapeKeys: penteForkShapeKeys,
+    blockedAnim: penteBlockedAnim,
+    outlineVariant: penteOutlineVariant,
+    gameOpenThreesX: penteGameOpenThreesX,
+    onWin: penteOnWin,
+    onNewGame: penteNotifyNewGame,
+    toggleShowPatterns: penteToggleShowPatterns,
+    toggleReference: penteToggleReference,
+    resetStats: penteResetStats,
+  } = usePatternStats({
+    history: penteState.history,
+    board: penteState.board,
+    gridSize: 15,
+    winPlayer: penteState.win?.player ?? null,
+  });
 
-  const moyoNewGame = useCallback(() => {
-    moyoReset(moyoBoardSize(difficulty));
-    setMoyoThinking(false);
-    setMoyoHovered(null);
-  }, [moyoReset, difficulty]);
+  const penteNewGame = useCallback(() => {
+    penteReset();
+    penteNotifyNewGame();
+    setPenteThinking(false);
+    setPenteWinRecorded(false);
+    setPenteHovered(null);
+  }, [penteReset, penteNotifyNewGame]);
 
-  // Reset Moyo board when difficulty changes (board size changes)
-  useEffect(() => {
-    if (mode === 'moyo') moyoReset(moyoBoardSize(difficulty));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [difficulty]);
-
-  const onMoyoCellClick = (row: number, col: number) => {
-    if (mode !== 'moyo') return;
-    if (moyoState.gameOver || moyoState.turn !== 'X' || moyoState.board[row][col]) return;
-    if (moyoState.movesX >= MOYO_MOVES_PER_SIDE) return;
-    moyoPlace(row, col, 'X');
+  const onPenteCellClick = (row: number, col: number) => {
+    if (mode !== 'pente') return;
+    if (penteState.win || penteState.turn !== 'X' || penteState.board[row][col]) return;
+    pentePlace(row, col, 'X');
   };
 
   useEffect(() => {
-    if (mode !== 'moyo') return;
-    if (moyoState.gameOver) return;
-    if (moyoState.turn === 'O' && !moyoThinking && moyoState.movesO < MOYO_MOVES_PER_SIDE) {
-      setMoyoThinking(true);
+    if (mode !== 'pente') return;
+    if (penteState.win) {
+      if (!penteWinRecorded) {
+        penteOnWin(penteState.win.player);
+        setPenteWinRecorded(true);
+      }
+      return;
+    }
+    setPenteWinRecorded(false);
+    if (penteState.turn === 'O' && !penteThinking) {
+      setPenteThinking(true);
       const [lo, hi] = TIMINGS.aiDelayMs[difficulty];
       const delay = lo + Math.random() * (hi - lo);
       const t = setTimeout(() => {
-        const [row, col] = moyoAiMove(moyoState.board, difficulty, 'O');
-        moyoPlace(row, col, 'O');
-        setMoyoThinking(false);
+        const [row, col] = penteAiMove(penteState.board, {
+          aiPlayer: 'O',
+          humanPlayer: 'X',
+          difficulty,
+          pairsAI: penteState.pairsO,
+          pairsHuman: penteState.pairsX,
+        });
+        pentePlace(row, col, 'O');
+        setPenteThinking(false);
       }, delay);
       return () => clearTimeout(t);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, moyoState.turn, moyoState.gameOver, moyoState.board, difficulty]);
+  }, [mode, penteState.turn, penteState.win, penteState.board, difficulty]);
+
+  // Capture stats computed once per render (board changes are the trigger)
+  const penteThreats = useMemo(() => ({
+    X: countThreats(penteState.board, 'X').count,
+    O: countThreats(penteState.board, 'O').count,
+  }), [penteState.board]);
+
+  const penteVuln = useMemo(() => ({
+    pairsX: findVulnerablePairs(penteState.board, 'X'),
+    pairsO: findVulnerablePairs(penteState.board, 'O'),
+  }), [penteState.board]);
+
+  const penteThreatsX = useMemo(() => countThreats(penteState.board, 'X').cells, [penteState.board]);
+  const penteThreatsO = useMemo(() => countThreats(penteState.board, 'O').cells, [penteState.board]);
+
+  // Board adapter: maps PenteState into GameState shape Board expects.
+  // Line-wins pass the line; capture-wins pass win=null (no board decoration).
+  const penteBoardState = useMemo((): GameState => ({
+    board: penteState.board,
+    turn: penteState.turn,
+    moves: penteState.history.length,
+    lastMove: penteState.lastMove,
+    win: penteState.win?.type === 'line'
+      ? { player: penteState.win.player, line: penteState.win.line! }
+      : null,
+    history: penteState.history,
+  }), [penteState]);
 
   // ── Mode switching ────────────────────────────────────────────────────────
   const switchMode = (next: AppMode) => {
     setMode(next);
     setThinking(false);
-    setMoyoThinking(false);
+    setPenteThinking(false);
     setHovered(null);
-    setMoyoHovered(null);
-    if (next === 'moyo') moyoReset(moyoBoardSize(difficulty));
+    setPenteHovered(null);
   };
 
   // ── Shared ────────────────────────────────────────────────────────────────
   const updateTweak = (patch: Partial<TweakState>) => setTweaks(prev => ({ ...prev, ...patch }));
 
-  // Board adapter for Moyo: maps MoyoState into the GameState shape Board expects
-  const moyoBoardState = useMemo((): GameState => ({
-    board: moyoState.board,
-    turn: moyoState.turn,
-    moves: moyoState.movesX + moyoState.movesO,
-    lastMove: moyoState.lastMove,
-    win: null,
-    history: moyoState.history,
-  }), [moyoState]);
-
-  // For Moyo, use fixed cellPx = floor(600/15) so the smaller board is centered
-  const FRAME_GRID_SIZE = 15;
-  const moyoCellPx = BOARD.cellPx(FRAME_GRID_SIZE);
-  const moyoBoardPx = moyoCellPx * moyoBoardSz;
-  const moyoFramePx = moyoCellPx * FRAME_GRID_SIZE;
-  const moyoBoardOffsetX = Math.floor((moyoFramePx - moyoBoardPx) / 2);
-  const moyoBoardOffsetY = Math.floor((moyoFramePx - moyoBoardPx) / 2);
+  const penteCellPx = BOARD.cellPx(15);
 
   return (
     <div className="app" style={{ color: theme.ui }}>
@@ -179,11 +209,11 @@ export function App() {
           </button>
           <span className="mode-sep" style={{ opacity: 0.35 }}>|</span>
           <button
-            className={`mode-btn${mode === 'moyo' ? ' mode-btn--active' : ''}`}
-            onClick={() => switchMode('moyo')}
+            className={`mode-btn${mode === 'pente' ? ' mode-btn--active' : ''}`}
+            onClick={() => switchMode('pente')}
             style={{ color: theme.ui }}
           >
-            Moyo
+            Pente
           </button>
         </div>
 
@@ -231,53 +261,59 @@ export function App() {
             </>
           )}
 
-          {/* ── Moyo ──────────────────────────────────────────────── */}
-          {mode === 'moyo' && (
+          {/* ── Pente ─────────────────────────────────────────────── */}
+          {mode === 'pente' && (
             <>
               <div className="board-wrap">
-                <MoyoWinBanner gameOver={moyoState.gameOver} territory={moyoState.territory} theme={theme} />
+                <PenteWinBanner win={penteState.win} theme={theme} />
                 <Board
                   theme={theme}
-                  gridSize={moyoBoardSz}
-                  frameGridSize={FRAME_GRID_SIZE}
+                  gridSize={15}
                   roughness01={roughness01}
                   showTexture={tweaks.paperTexture}
                   showCoords={tweaks.showCoords}
-                  state={moyoBoardState}
-                  hovered={moyoHovered}
-                  onCellClick={onMoyoCellClick}
-                  onHover={setMoyoHovered}
-                  showPatterns={false}
+                  state={penteBoardState}
+                  hovered={penteHovered}
+                  onCellClick={onPenteCellClick}
+                  onHover={setPenteHovered}
+                  activeShapes={penteActiveShapes}
+                  forkShapeKeys={penteForkShapeKeys}
+                  blockedAnim={penteBlockedAnim}
+                  showPatterns={penteSettings.showPatterns}
+                  outlineVariant={penteOutlineVariant}
                   overlayContent={
-                    <TerritoryOverlay
-                      territory={moyoState.territory}
-                      boardSize={moyoBoardSz}
-                      cellPx={moyoCellPx}
-                      pad={28}
-                      boardOffsetX={moyoBoardOffsetX}
-                      boardOffsetY={moyoBoardOffsetY}
+                    <CaptureOverlay
+                      vulnPairs={[...penteVuln.pairsX, ...penteVuln.pairsO]}
+                      threatCellsX={penteThreatsX}
+                      threatCellsO={penteThreatsO}
+                      cellPx={penteCellPx}
+                      pad={BOARD.pad}
                       theme={theme}
-                      show={moyoShowPatterns}
+                      show={penteSettings.showPatterns}
                     />
                   }
                 />
-                <button className="board-new-game" onClick={moyoNewGame} style={{ color: theme.ui }}>new game</button>
+                <button className="board-new-game" onClick={penteNewGame} style={{ color: theme.ui }}>new game</button>
               </div>
 
-              <MoyoMarginNotes
+              <PenteMarginNotes
                 theme={theme}
-                state={moyoState}
-                boardSize={moyoBoardSz}
-                thinking={moyoThinking}
+                penteState={penteState}
+                sessionStats={penteSessionStats}
+                settings={penteSettings}
+                thinking={penteThinking}
                 difficulty={difficulty}
-                patterns={moyoPatterns}
-                showPatterns={moyoShowPatterns}
-                referenceOpen={moyoReferenceOpen}
+                threatsX={penteThreats.X}
+                threatsO={penteThreats.O}
+                vulnX={penteVuln.pairsX.length}
+                vulnO={penteVuln.pairsO.length}
+                gameOpenThreesX={penteGameOpenThreesX}
                 onDifficulty={setDifficulty}
-                onNewGame={moyoNewGame}
-                onUndo={moyoUndo}
-                onTogglePatterns={() => setMoyoShowPatterns(v => !v)}
-                onToggleReference={() => setMoyoReferenceOpen(v => !v)}
+                onNewGame={penteNewGame}
+                onUndo={penteUndo}
+                onTogglePatterns={penteToggleShowPatterns}
+                onToggleReference={penteToggleReference}
+                onResetStats={penteResetStats}
               />
             </>
           )}
