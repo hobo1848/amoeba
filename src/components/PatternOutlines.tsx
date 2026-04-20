@@ -53,7 +53,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
 
       const [dr, dc] = shape.dir;
       const isDiagonal = dr !== 0 && dc !== 0;
-      let node: Element;
+      let node: SVGElement;
 
       if (isDiagonal) {
         // Tight parallelogram: TL/TR of first cell, BR/BL of last cell.
