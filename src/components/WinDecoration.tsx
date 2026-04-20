@@ -20,6 +20,7 @@ export function WinDecoration({ win, theme, cellPx, pad, offsetX = 0, offsetY = 
     const g = gRef.current;
     if (!g) return;
     g.innerHTML = '';
+    if (!win.line || win.line.length < 2) return;
     const pts = win.line.map(({ row, col }) => ({
       x: pad + offsetX + col * cellPx + cellPx / 2,
       y: pad + offsetY + row * cellPx + cellPx / 2,

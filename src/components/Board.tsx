@@ -100,7 +100,7 @@ export function Board({
     const pt = svg.createSVGPoint();
     pt.x = e.clientX; pt.y = e.clientY;
     const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
-    const x = local.x - pad, y = local.y - pad;
+    const x = local.x - pad - boardOffsetX, y = local.y - pad - boardOffsetY;
     if (x < 0 || y < 0 || x > boardPx || y > boardPx) { onHover(null); return; }
     const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
     onHover({ row, col });

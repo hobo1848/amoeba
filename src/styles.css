@@ -255,16 +255,6 @@ body {
   .mode-btn { font-size: 18px; }
 }
 
-/* ── Territory overlay fade-in ───────────────────────────────── */
-@keyframes territoryFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* ── Moyo shared cell (neutral / contested) values ───────────── */
-.moyo-shared {
-  opacity: 0.45;
-}
 
 /* ── Mobile: maximise grid real estate ───────────────────────── */
 @media (max-width: 600px) {
