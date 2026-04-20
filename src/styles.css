@@ -209,6 +209,63 @@ body {
   .app, .banner { animation: none; transition: none; }
 }
 
+/* ── Mode toggle bar ─────────────────────────────────────────── */
+.mode-toggle-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 32px 0;
+  font-family: 'Caveat', cursive;
+}
+.mode-sep {
+  font-size: 20px;
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+.mode-btn {
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.45;
+  line-height: 1;
+  position: relative;
+}
+.mode-btn--active {
+  opacity: 1;
+}
+.mode-btn--active::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+  opacity: 0.55;
+}
+.mode-btn:hover { opacity: 0.85; }
+.mode-btn--active:hover { opacity: 1; }
+
+@media (max-width: 600px) {
+  .mode-toggle-bar { padding: 8px 8px 0; gap: 8px; }
+  .mode-btn { font-size: 18px; }
+}
+
+/* ── Territory overlay fade-in ───────────────────────────────── */
+@keyframes territoryFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ── Moyo shared cell (neutral / contested) values ───────────── */
+.moyo-shared {
+  opacity: 0.45;
+}
+
 /* ── Mobile: maximise grid real estate ───────────────────────── */
 @media (max-width: 600px) {
   .app {

@@ -159,7 +159,7 @@ export function MarginNotes({
       </div>
 
       <div className="footer-note">
-        {theme.inkName} · {gridSize}×{gridSize} · v1.1
+        {theme.inkName} · {gridSize}×{gridSize} · v1.2
         {'  '}
         <button className="reset-stats-link" onClick={onResetStats} style={{ color: theme.ui }}>
           reset stats

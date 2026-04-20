@@ -9,9 +9,11 @@ interface Props {
   theme: Aesthetic;
   cellPx: number;
   pad: number;
+  offsetX?: number;
+  offsetY?: number;
 }
 
-export function WinDecoration({ win, theme, cellPx, pad }: Props) {
+export function WinDecoration({ win, theme, cellPx, pad, offsetX = 0, offsetY = 0 }: Props) {
   const gRef = useRef<SVGGElement>(null);
 
   useLayoutEffect(() => {
@@ -19,8 +21,8 @@ export function WinDecoration({ win, theme, cellPx, pad }: Props) {
     if (!g) return;
     g.innerHTML = '';
     const pts = win.line.map(({ row, col }) => ({
-      x: pad + col * cellPx + cellPx / 2,
-      y: pad + row * cellPx + cellPx / 2,
+      x: pad + offsetX + col * cellPx + cellPx / 2,
+      y: pad + offsetY + row * cellPx + cellPx / 2,
     }));
 
     const strikePaths = winStrikePaths(pts, theme.winStrike, 31);
@@ -50,7 +52,7 @@ export function WinDecoration({ win, theme, cellPx, pad }: Props) {
       } catch { /* no-op */ }
       g.appendChild(el);
     });
-  }, [win, theme, cellPx, pad]);
+  }, [win, theme, cellPx, pad, offsetX, offsetY]);
 
   return <g ref={gRef} />;
 }

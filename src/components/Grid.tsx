@@ -9,10 +9,12 @@ interface Props {
   cellPx: number;
   boardPx: number;
   pad: number;
+  offsetX?: number;
+  offsetY?: number;
   svgEl: SVGSVGElement | null;
 }
 
-export function Grid({ theme, gridSize, cellPx, boardPx, pad, svgEl }: Props) {
+export function Grid({ theme, gridSize, cellPx, boardPx, pad, offsetX = 0, offsetY = 0, svgEl }: Props) {
   const ref = useRef<SVGGElement>(null);
 
   useLayoutEffect(() => {
@@ -20,17 +22,18 @@ export function Grid({ theme, gridSize, cellPx, boardPx, pad, svgEl }: Props) {
     if (!g || !svgEl) return;
     g.innerHTML = '';
     const rc = rough.svg(svgEl);
-    g.appendChild(rc.rectangle(pad, pad, boardPx, boardPx, gridRectOpts(theme.grid)));
+    const ox = pad + offsetX, oy = pad + offsetY;
+    g.appendChild(rc.rectangle(ox, oy, boardPx, boardPx, gridRectOpts(theme.grid)));
     for (let i = 1; i < gridSize; i++) {
-      const y = pad + i * cellPx;
-      g.appendChild(rc.line(pad + 2, y, pad + boardPx - 2, y, gridLineOpts(theme.grid, 100 + i)));
+      const y = oy + i * cellPx;
+      g.appendChild(rc.line(ox + 2, y, ox + boardPx - 2, y, gridLineOpts(theme.grid, 100 + i)));
     }
     for (let i = 1; i < gridSize; i++) {
-      const x = pad + i * cellPx;
-      g.appendChild(rc.line(x, pad + 2, x, pad + boardPx - 2, gridLineOpts(theme.grid, 200 + i)));
+      const x = ox + i * cellPx;
+      g.appendChild(rc.line(x, oy + 2, x, oy + boardPx - 2, gridLineOpts(theme.grid, 200 + i)));
     }
     g.setAttribute('opacity', String(theme.gridOpacity));
-  }, [theme, gridSize, cellPx, boardPx, pad, svgEl]);
+  }, [theme, gridSize, cellPx, boardPx, pad, offsetX, offsetY, svgEl]);
 
   return <g ref={ref} />;
 }
