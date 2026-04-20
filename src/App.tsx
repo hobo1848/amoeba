@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AESTHETICS, TIMINGS, type Difficulty, type GridSize } from './tokens';
 import { useGame } from './game/useGame';
+import { usePatternStats } from './game/usePatternStats';
 import { aiMove } from './game/aiMove';
 import { Board } from './components/Board';
 import { MarginNotes } from './components/MarginNotes';
@@ -25,16 +26,39 @@ export function App() {
   const { state, place, undo, reset } = useGame(gridSize);
   const [hovered, setHovered] = useState<{ row: number; col: number } | null>(null);
   const [thinking, setThinking] = useState(false);
-  const [xWins, setXWins] = useState(0);
-  const [oWins, setOWins] = useState(0);
   const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+
+  // Track whether onWin has been called for this game's result.
+  const [winRecorded, setWinRecorded] = useState(false);
+
+  const {
+    sessionStats,
+    settings,
+    activeShapes,
+    forkShapeKeys,
+    blockedAnim,
+    outlineVariant,
+    gameOpenThreesX,
+    onWin,
+    onNewGame: notifyNewGame,
+    toggleShowPatterns,
+    toggleReference,
+    resetStats,
+  } = usePatternStats({
+    history: state.history,
+    board: state.board,
+    gridSize,
+    winPlayer: state.win?.player ?? null,
+  });
 
   useEffect(() => { reset(); setThinking(false); setHovered(null); }, [gridSize]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const newGame = useCallback(() => {
     reset();
+    notifyNewGame();
     setThinking(false);
-  }, [reset]);
+    setWinRecorded(false);
+  }, [reset, notifyNewGame]);
 
   const onCellClick = (row: number, col: number) => {
     if (state.win || state.turn !== 'X' || state.board[row][col]) return;
@@ -43,10 +67,13 @@ export function App() {
 
   useEffect(() => {
     if (state.win) {
-      if (state.win.player === 'X') setXWins(v => v + 1);
-      else setOWins(v => v + 1);
+      if (!winRecorded) {
+        onWin(state.win.player);
+        setWinRecorded(true);
+      }
       return;
     }
+    setWinRecorded(false);
     if (state.turn === 'O' && !thinking) {
       setThinking(true);
       const [lo, hi] = TIMINGS.aiDelayMs[difficulty];
@@ -88,6 +115,11 @@ export function App() {
               hovered={hovered}
               onCellClick={onCellClick}
               onHover={setHovered}
+              activeShapes={activeShapes}
+              forkShapeKeys={forkShapeKeys}
+              blockedAnim={blockedAnim}
+              showPatterns={settings.showPatterns}
+              outlineVariant={outlineVariant}
             />
             <button className="board-new-game" onClick={newGame} style={{ color: theme.ui }}>new game</button>
           </div>
@@ -96,13 +128,17 @@ export function App() {
             theme={theme}
             state={state}
             gridSize={gridSize as GridSize}
-            xWins={xWins}
-            oWins={oWins}
+            sessionStats={sessionStats}
+            settings={settings}
             thinking={thinking}
             difficulty={difficulty}
             onDifficulty={setDifficulty}
             onNewGame={newGame}
             onUndo={undo}
+            onTogglePatterns={toggleShowPatterns}
+            onToggleReference={toggleReference}
+            onResetStats={resetStats}
+            gameOpenThreesX={gameOpenThreesX}
           />
         </div>
       </div>
