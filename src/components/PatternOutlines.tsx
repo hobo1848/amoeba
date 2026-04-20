@@ -57,6 +57,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
 
       if (isDiagonal) {
         // Tight parallelogram: TL/TR of first cell, BR/BL of last cell.
+        // Higher bowing softens the angular corners.
         const fx = pad + first.col * cellPx;
         const fy = pad + first.row * cellPx;
         const lx = pad + last.col * cellPx;
@@ -66,7 +67,7 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
           [fx + cellPx - margin, fy + margin],
           [lx + cellPx - margin, ly + cellPx - margin],
           [lx + margin,          ly + cellPx - margin],
-        ], opts) as SVGElement;
+        ], { ...opts, bowing: 1.8 }) as SVGElement;
       } else {
         const minCol = Math.min(first.col, last.col);
         const maxCol = Math.max(first.col, last.col);
