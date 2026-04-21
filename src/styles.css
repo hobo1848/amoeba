@@ -29,9 +29,9 @@ body {
 }
 .page-inner {
   display: grid;
-  grid-template-columns: 1fr 240px;
-  gap: 28px;
-  padding: 28px 32px 32px 32px;
+  grid-template-columns: 1fr 272px;
+  gap: 32px;
+  padding: 24px 28px 28px 28px;
 }
 @media (max-width: 980px) {
   .page-inner { grid-template-columns: 1fr; }
@@ -50,7 +50,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
 }
 .board-header-left {
   display: flex;
@@ -84,18 +84,18 @@ body {
 }
 .turn-compact-text {
   font-family: 'Caveat', cursive;
-  font-size: 18px;
+  font-size: 20px;
   line-height: 1;
 }
 
 /* Compact score (used in board header) */
 .score-compact {
   display: flex;
-  gap: 14px;
+  gap: 18px;
 }
 .score-compact-item .sc-n {
   font-family: 'Caveat', cursive;
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
   line-height: 1;
 }
@@ -108,10 +108,10 @@ body {
 
 /* Below-board footer */
 .board-footer {
-  padding-top: 10px;
+  padding-top: 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .board-footer-row {
   display: flex;
@@ -127,7 +127,7 @@ body {
 }
 .footer-diff {
   font-family: 'Caveat', cursive;
-  font-size: 17px;
+  font-size: 18px;
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -157,7 +157,7 @@ body {
   background: transparent;
   border: 0;
   font-family: 'Caveat', cursive;
-  font-size: 17px;
+  font-size: 18px;
   cursor: pointer;
   color: inherit;
   opacity: 0.5;
@@ -171,11 +171,11 @@ body {
 .board-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
 
 /* ── Sidebar (stats panel) ───────────────────────────────────────── */
-.margin { display: flex; flex-direction: column; gap: 18px; }
+.margin { display: flex; flex-direction: column; gap: 0; }
 
-.note-block { padding: 10px 0; border-top: 1px dashed rgba(0,0,0,0.15); }
+.note-block { padding: 22px 0; border-top: 1px dashed rgba(0,0,0,0.15); }
 .note-block--first { border-top: none; padding-top: 0; }
-.note-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; margin-bottom: 6px; }
+.note-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; margin-bottom: 10px; }
 
 /* Legacy turn/score styles kept for potential reuse */
 .turn-row { display: flex; align-items: center; gap: 14px; }
@@ -186,7 +186,7 @@ body {
 .stat .n { font-size: 22px; font-weight: 600; }
 .stat .l { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; }
 
-.footer-note { font-size: 10px; opacity: 0.45; letter-spacing: 0.1em; }
+.footer-note { font-size: 10px; opacity: 0.45; letter-spacing: 0.12em; }
 
 /* Tweaks toggle button */
 .tweaks-toggle {
@@ -344,6 +344,7 @@ body {
   .mode-btn { font-size: 18px; }
   .board-header-right { gap: 12px; }
   .turn-compact-text { font-size: 15px; }
+  .score-compact { gap: 12px; }
   .score-compact-item .sc-n { font-size: 15px; }
 
   /* Compact board footer */
@@ -353,11 +354,12 @@ body {
   .footer-note { display: none; }
 
   /* Sidebar stats compact */
-  .margin { gap: 8px; }
-  .note-block { padding: 8px 0; }
+  .margin { gap: 0; }
+  .note-block { padding: 10px 0; }
   .note-block--first { padding-top: 0; }
+  .shape-stats { gap: 5px 10px; }
   .shape-label { font-size: 10px; }
-  .shape-val { font-size: 14px; }
+  .shape-val { font-size: 15px; }
 }
 
 /* ── Pattern recognition styles ─────────────────────────────────── */
@@ -372,7 +374,7 @@ body {
   margin-top: 8px;
   display: grid;
   grid-template-columns: 1fr auto auto;
-  gap: 4px 10px;
+  gap: 8px 14px;
   align-items: baseline;
 }
 .shape-row--header .shape-col-head {
@@ -388,12 +390,12 @@ body {
 }
 .shape-label {
   font-size: 11px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  opacity: 0.55;
+  opacity: 0.58;
 }
 .shape-val {
-  font-size: 16px;
+  font-size: 21px;
   font-weight: 600;
   text-align: right;
   font-family: 'Caveat', cursive;
@@ -401,7 +403,7 @@ body {
 
 /* This-game/avg line */
 .this-game-line {
-  margin-top: 8px;
+  margin-top: 14px;
   font-size: 9px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -410,11 +412,11 @@ body {
 
 /* Show patterns toggle */
 .patterns-toggle-row {
-  margin-top: 10px;
+  margin-top: 20px;
 }
 .patterns-toggle {
   font-family: 'Caveat', cursive;
-  font-size: 18px;
+  font-size: 19px;
   background: transparent;
   border: 0;
   cursor: pointer;
@@ -441,7 +443,7 @@ body {
 /* What gets recognized? link */
 .reference-toggle {
   display: block;
-  margin-top: 8px;
+  margin-top: 12px;
   background: transparent;
   border: 0;
   padding: 0;
