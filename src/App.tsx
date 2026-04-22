@@ -13,7 +13,6 @@ import { Tweaks, type TweakState } from './components/Tweaks';
 import { WinBanner } from './components/WinBanner';
 import { PenteWinBanner } from './components/PenteWinBanner';
 import { CaptureOverlay } from './components/CaptureOverlay';
-import { TurnIndicator } from './components/TurnIndicator';
 import { BOARD } from './tokens';
 import type { GameState } from './game/useGame';
 
@@ -190,73 +189,44 @@ export function App() {
   };
 
   // ── Shared ────────────────────────────────────────────────────────────────
-  const updateTweak = (patch: Partial<TweakState>) => setTweaks(prev => ({ ...prev, ...patch }));
+  const updateTweak = (patch: Partial<TweakState>) => setTweaks(prev => ({ ...prev, ...patch } as TweakState));
 
   const penteCellPx = BOARD.cellPx(15);
+
+  const activeTurn = mode === 'gomoku' ? state.turn : penteState.turn;
+  const activeThinking = mode === 'gomoku' ? thinking : penteThinking;
+  const activeGridSize = mode === 'gomoku' ? gridSize : 15;
+  const activeInkName = theme.inkName;
 
   return (
     <div className="app" style={{ color: theme.ui }}>
       <div className="page" style={{ background: theme.paper }}>
         <div className="page-inner">
 
+          {/* ── Top bar: wordmark + mode pill (spans both columns) ───── */}
+          <header className="topbar">
+            <h1 className="wordmark">Amőba</h1>
+            <span className="wordmark-sub">öt‑öt · five in a row</span>
+            <div className="mode-pill">
+              <button
+                className={`mode-pill-btn${mode === 'gomoku' ? ' active' : ''}`}
+                onClick={() => switchMode('gomoku')}
+                style={mode === 'gomoku' ? { background: theme.ui } : {}}
+              >
+                <span style={mode === 'gomoku' ? { color: theme.paper } : {}}>Gomoku</span>
+              </button>
+              <button
+                className={`mode-pill-btn${mode === 'pente' ? ' active' : ''}`}
+                onClick={() => switchMode('pente')}
+                style={mode === 'pente' ? { background: theme.ui } : {}}
+              >
+                <span style={mode === 'pente' ? { color: theme.paper } : {}}>Pente</span>
+              </button>
+            </div>
+          </header>
+
           {/* ── Board column ──────────────────────────────────────────── */}
           <div className="board-col">
-
-            {/* ── Above-board header ── */}
-            <div className="board-header" style={{ color: theme.ui }}>
-              <div className="board-header-left">
-                <h1 className="board-title">Amőba</h1>
-                <div className="board-mode-selector">
-                  <button
-                    className={`mode-btn${mode === 'gomoku' ? ' mode-btn--active' : ''}`}
-                    onClick={() => switchMode('gomoku')}
-                    style={{ color: theme.ui }}
-                  >
-                    5-in-a-row
-                  </button>
-                  <span className="mode-sep" style={{ opacity: 0.35 }}>|</span>
-                  <button
-                    className={`mode-btn${mode === 'pente' ? ' mode-btn--active' : ''}`}
-                    onClick={() => switchMode('pente')}
-                    style={{ color: theme.ui }}
-                  >
-                    Pente
-                  </button>
-                </div>
-              </div>
-              <div className="board-header-right">
-                {mode === 'gomoku' && (
-                  <>
-                    <TurnIndicator turn={state.turn} thinking={thinking} theme={theme} compact />
-                    <div className="score-compact">
-                      <div className="score-compact-item">
-                        <div className="sc-n">{sessionStats.sessionWins.X}</div>
-                        <div className="sc-l">X (you)</div>
-                      </div>
-                      <div className="score-compact-item">
-                        <div className="sc-n">{sessionStats.sessionWins.O}</div>
-                        <div className="sc-l">O (cpu)</div>
-                      </div>
-                    </div>
-                  </>
-                )}
-                {mode === 'pente' && (
-                  <>
-                    <TurnIndicator turn={penteState.turn} thinking={penteThinking} theme={theme} compact />
-                    <div className="score-compact">
-                      <div className="score-compact-item">
-                        <div className="sc-n">{penteSessionStats.sessionWins.X}</div>
-                        <div className="sc-l">X (you)</div>
-                      </div>
-                      <div className="score-compact-item">
-                        <div className="sc-n">{penteSessionStats.sessionWins.O}</div>
-                        <div className="sc-l">O (cpu)</div>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
 
             {/* ── Board ── */}
             {mode === 'gomoku' && (
@@ -313,41 +283,40 @@ export function App() {
               </div>
             )}
 
-            {/* ── Below-board footer ── */}
-            <div className="board-footer" style={{ color: theme.ui }}>
-              <div className="board-footer-row">
-                <div className="footer-diff-row">
-                  {DIFFICULTY_LEVELS.map(d => (
-                    <button
-                      key={d}
-                      className={`footer-diff${difficulty === d ? ' active' : ''}`}
-                      onClick={() => setDifficulty(d)}
-                      style={{ color: theme.ui }}
-                    >
-                      {d}
-                    </button>
-                  ))}
-                </div>
-                <div className="footer-actions">
+            {/* ── Single footer row: difficulty · actions · meta ── */}
+            <div className="footer" style={{ color: theme.ui }}>
+              <div className="footer-group">
+                <span className="footer-label">difficulty</span>
+                {DIFFICULTY_LEVELS.map(d => (
                   <button
-                    className="footer-action-btn"
-                    onClick={mode === 'gomoku' ? newGame : penteNewGame}
+                    key={d}
+                    className={`footer-link${difficulty === d ? ' active' : ''}`}
+                    onClick={() => setDifficulty(d)}
                     style={{ color: theme.ui }}
                   >
-                    new game
+                    {d}
                   </button>
-                  <button
-                    className="footer-action-btn"
-                    onClick={mode === 'gomoku' ? undo : penteUndo}
-                    style={{ color: theme.ui }}
-                  >
-                    undo
-                  </button>
-                </div>
+                ))}
               </div>
-              <div className="footer-note" style={{ color: theme.ui }}>
-                {theme.inkName} · {mode === 'gomoku' ? `${gridSize}×${gridSize}` : '15×15'} · v1.3
-                {'  '}
+              <div className="footer-group">
+                <button
+                  className="footer-link"
+                  onClick={mode === 'gomoku' ? newGame : penteNewGame}
+                  style={{ color: theme.ui }}
+                >
+                  new game
+                </button>
+                <span style={{ opacity: 0.25 }}>·</span>
+                <button
+                  className="footer-link"
+                  onClick={mode === 'gomoku' ? undo : penteUndo}
+                  style={{ color: theme.ui }}
+                >
+                  undo
+                </button>
+              </div>
+              <div className="footer-meta">
+                {activeInkName} · {activeGridSize}×{activeGridSize} · v1.3 ·{' '}
                 <button
                   className="reset-stats-link"
                   onClick={mode === 'gomoku' ? resetStats : penteResetStats}
@@ -359,10 +328,12 @@ export function App() {
             </div>
           </div>
 
-          {/* ── Sidebar (stats only) ──────────────────────────────────── */}
+          {/* ── Rail sidebar ─────────────────────────────────────────── */}
           {mode === 'gomoku' && (
             <MarginNotes
               theme={theme}
+              turn={activeTurn}
+              thinking={activeThinking}
               sessionStats={sessionStats}
               settings={settings}
               gameOpenThreesX={gameOpenThreesX}
@@ -373,6 +344,8 @@ export function App() {
           {mode === 'pente' && (
             <PenteMarginNotes
               theme={theme}
+              turn={activeTurn}
+              thinking={activeThinking}
               penteState={penteState}
               sessionStats={penteSessionStats}
               settings={penteSettings}
