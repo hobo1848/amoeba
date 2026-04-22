@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import rough from 'roughjs';
 import type { Aesthetic } from '../tokens';
-import { gridRectOpts, gridLineOpts } from '../roughPaths';
+import { gridLineOpts } from '../roughPaths';
 
 interface Props {
   theme: Aesthetic;
@@ -23,14 +23,13 @@ export function Grid({ theme, gridSize, cellPx, boardPx, pad, offsetX = 0, offse
     g.innerHTML = '';
     const rc = rough.svg(svgEl);
     const ox = pad + offsetX, oy = pad + offsetY;
-    g.appendChild(rc.rectangle(ox, oy, boardPx, boardPx, gridRectOpts(theme.grid)));
-    for (let i = 1; i < gridSize; i++) {
+    for (let i = 0; i <= gridSize; i++) {
       const y = oy + i * cellPx;
-      g.appendChild(rc.line(ox + 2, y, ox + boardPx - 2, y, gridLineOpts(theme.grid, 100 + i)));
+      g.appendChild(rc.line(ox, y, ox + boardPx, y, gridLineOpts(theme.grid, 100 + i)));
     }
-    for (let i = 1; i < gridSize; i++) {
+    for (let i = 0; i <= gridSize; i++) {
       const x = ox + i * cellPx;
-      g.appendChild(rc.line(x, oy + 2, x, oy + boardPx - 2, gridLineOpts(theme.grid, 200 + i)));
+      g.appendChild(rc.line(x, oy, x, oy + boardPx, gridLineOpts(theme.grid, 200 + i)));
     }
     g.setAttribute('opacity', String(theme.gridOpacity));
   }, [theme, gridSize, cellPx, boardPx, pad, offsetX, offsetY, svgEl]);

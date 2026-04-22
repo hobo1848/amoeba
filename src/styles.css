@@ -12,7 +12,7 @@ body {
 .app { min-height: 100vh; display: grid; place-items: center; padding: 32px 24px; }
 .page {
   position: relative;
-  max-width: 1020px;
+  max-width: 1060px;
   width: 100%;
   border-radius: 4px;
   box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 2px 6px rgba(0,0,0,0.08), 0 18px 40px -12px rgba(0,0,0,0.18);
@@ -27,14 +27,86 @@ body {
   pointer-events: none;
   border-radius: 4px 4px 0 0;
 }
+/* Red margin rule, like a real füzet */
+.page::after {
+  content: "";
+  position: absolute;
+  left: 78px;
+  top: 64px;
+  bottom: 64px;
+  width: 1px;
+  background: rgba(196,82,74,0.22);
+  pointer-events: none;
+}
 .page-inner {
   display: grid;
-  grid-template-columns: 1fr 272px;
-  gap: 32px;
-  padding: 24px 28px 28px 28px;
+  grid-template-columns: 1fr 260px;
+  gap: 36px;
+  padding: 28px 36px 24px 36px;
 }
 @media (max-width: 980px) {
   .page-inner { grid-template-columns: 1fr; }
+  .page::after { display: none; }
+}
+
+/* ── Top bar: wordmark + mode pill ──────────────────────────────── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.wordmark {
+  margin: 0;
+  font-family: 'Caveat', cursive;
+  font-weight: 700;
+  font-size: 42px;
+  line-height: 1;
+  letter-spacing: 0.5px;
+}
+.wordmark-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  opacity: 0.45;
+  margin-left: -4px;
+  align-self: center;
+}
+.mode-pill {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 999px;
+  padding: 2px;
+  background: rgba(255,255,255,0.5);
+}
+.mode-pill-btn {
+  font-family: 'Caveat', cursive;
+  font-size: 18px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 4px 14px 5px;
+  border-radius: 999px;
+  cursor: pointer;
+  opacity: 0.55;
+}
+.mode-pill-btn.active {
+  background: currentColor;
+  opacity: 1;
+}
+.mode-pill-btn.active span {
+  color: #fff;
+  mix-blend-mode: normal;
+}
+/* Use a wrapper span inside the active button for text color */
+.mode-pill-btn--active-text {
+  color: #fbfcfb;
 }
 
 /* ── Board column layout ─────────────────────────────────────────── */
@@ -44,149 +116,309 @@ body {
   min-width: 0;
 }
 
-/* Above-board header */
-.board-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 16px;
-}
-.board-header-left {
+.board-wrap { position: relative; user-select: none; touch-action: manipulation; }
+.board-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+
+/* ── Below-board footer: single row ─────────────────────────────── */
+.footer {
   display: flex;
   align-items: baseline;
-  gap: 10px;
-  flex-shrink: 0;
-}
-.board-title {
-  margin: 0;
-  font-family: 'Caveat', cursive;
-  font-weight: 700;
-  font-size: 36px;
-  line-height: 1;
-}
-.board-mode-selector {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.board-header-right {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-/* Compact turn indicator (used in board header) */
-.turn-compact {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.turn-compact-text {
-  font-family: 'Caveat', cursive;
-  font-size: 20px;
-  line-height: 1;
-}
-
-/* Compact score (used in board header) */
-.score-compact {
-  display: flex;
-  gap: 18px;
-}
-.score-compact-item .sc-n {
-  font-family: 'Caveat', cursive;
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1;
-}
-.score-compact-item .sc-l {
-  font-size: 9px;
-  letter-spacing: 0.15em;
+  gap: 22px;
+  padding-top: 18px;
+  margin-top: 8px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  font-size: 10px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  opacity: 0.55;
 }
-
-/* Below-board footer */
-.board-footer {
-  padding-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+.footer-group { display: flex; align-items: baseline; gap: 4px; }
+.footer-label {
+  opacity: 0.45;
+  margin-right: 8px;
 }
-.board-footer-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 4px 12px;
-}
-.footer-diff-row {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-.footer-diff {
-  font-family: 'Caveat', cursive;
-  font-size: 18px;
+.footer-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   background: transparent;
   border: 0;
-  cursor: pointer;
   color: inherit;
-  opacity: 0.4;
-  padding: 3px 8px;
-  line-height: 1;
-  position: relative;
+  padding: 2px 6px;
+  cursor: pointer;
+  opacity: 0.55;
+  border-bottom: 1px solid transparent;
+  line-height: 1.4;
 }
-.footer-diff.active { opacity: 0.85; }
-.footer-diff.active::after {
-  content: "";
-  position: absolute;
-  left: 6px; right: 6px; bottom: 1px;
-  height: 1.5px;
-  background: currentColor;
-  border-radius: 2px;
+.footer-link.active {
+  opacity: 1;
+  border-bottom-color: currentColor;
+}
+.footer-link:hover { opacity: 0.85; }
+.footer-meta {
+  margin-left: auto;
+  opacity: 0.35;
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+/* ── Rail (sidebar) ──────────────────────────────────────────────── */
+.rail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rail-section {
+  padding: 18px 0;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+.rail-section:first-child { padding-top: 0; border-top: 0; }
+.rail-label {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   opacity: 0.5;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
-.footer-diff:hover { opacity: 0.7; }
-.footer-actions {
+.rail-label.clickable { cursor: pointer; user-select: none; }
+.rail-label.clickable:hover { opacity: 0.8; }
+.rail-label-chev {
+  font-size: 10px;
+  opacity: 0.7;
+  transition: transform 0.15s ease;
+  display: inline-block;
+}
+.rail-label.open .rail-label-chev { transform: rotate(90deg); }
+.rail-label-summary {
+  margin-left: auto;
+  opacity: 0.5;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: none;
+}
+
+/* Turn block */
+.turn {
   display: flex;
   align-items: center;
   gap: 14px;
 }
-.footer-action-btn {
-  background: transparent;
-  border: 0;
+.turn-chip svg { display: block; }
+.turn-text {
   font-family: 'Caveat', cursive;
-  font-size: 18px;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.5;
-  padding: 2px 0;
+  font-size: 28px;
   line-height: 1;
 }
-.footer-action-btn:hover { opacity: 0.85; }
+.turn-sub {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-top: 4px;
+}
 
-.board-wrap { position: relative; user-select: none; touch-action: manipulation; }
+/* Score — big paired numbers */
+.score-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.score-cell .n {
+  font-family: 'Caveat', cursive;
+  font-size: 36px;
+  font-weight: 600;
+  line-height: 1;
+}
+.score-cell .l {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-top: 2px;
+}
 
-.board-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+/* Captures (Pente) — hero display */
+.captures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.capture-cell {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 22px;
+}
+.capture-cell .slash { opacity: 0.35; margin: 0 2px; }
+.capture-cell .total { font-size: 14px; opacity: 0.45; }
+.capture-cell .l {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-top: 2px;
+}
 
-/* ── Sidebar (stats panel) ───────────────────────────────────────── */
-.margin { display: flex; flex-direction: column; gap: 0; }
+/* ── Patterns (collapsible) ──────────────────────────────────────── */
+.collapse-body {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+.collapse-body.open { max-height: 800px; }
 
-.note-block { padding: 22px 0; border-top: 1px dashed rgba(0,0,0,0.15); }
-.note-block--first { border-top: none; padding-top: 0; }
-.note-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; margin-bottom: 10px; }
+/* Stat grid — two-col X/O, header shown once */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  column-gap: 18px;
+  row-gap: 8px;
+  align-items: baseline;
+  margin-top: 4px;
+}
+.sg-head {
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  text-align: right;
+}
+.sg-label {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.65;
+}
+.sg-val {
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  font-weight: 600;
+  text-align: right;
+  line-height: 1;
+}
+.sg-val--muted { opacity: 0.35; }
 
-/* Legacy turn/score styles kept for potential reuse */
-.turn-row { display: flex; align-items: center; gap: 14px; }
-.turn-chip { width: 42px; height: 42px; display: grid; place-items: center; }
-.turn-text { font-family: 'Caveat', cursive; font-size: 26px; line-height: 1; }
+/* This-game/avg line */
+.this-game-line {
+  margin-top: 14px;
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  opacity: 0.55;
+}
 
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.stat .n { font-size: 22px; font-weight: 600; }
-.stat .l { font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.55; }
+/* Show patterns toggle */
+.patterns-toggle {
+  margin-top: 14px;
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: inherit;
+  padding: 0;
+  line-height: 1;
+  opacity: 0.85;
+  position: relative;
+  display: block;
+}
+.patterns-toggle.on::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -2px;
+  height: 1.5px;
+  background: currentColor;
+  opacity: 0.45;
+  border-radius: 2px;
+}
+.patterns-toggle:hover { opacity: 1; }
 
-.footer-note { font-size: 10px; opacity: 0.45; letter-spacing: 0.12em; }
+/* What gets recognized? link */
+.reference-toggle {
+  display: block;
+  margin-top: 12px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.55;
+  text-align: left;
+  text-transform: lowercase;
+}
+.reference-toggle:hover { opacity: 0.9; }
+
+/* Inline pattern reference */
+.pattern-reference {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding-top: 8px;
+}
+.ref-entry {}
+.ref-name {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 600;
+  opacity: 0.85;
+  margin-bottom: 2px;
+}
+.ref-desc {
+  font-size: 9px;
+  letter-spacing: 0.04em;
+  opacity: 0.6;
+  line-height: 1.5;
+  margin-bottom: 3px;
+}
+.ref-diagram {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  opacity: 0.7;
+  letter-spacing: 0.08em;
+}
+
+/* Reset stats link */
+.reset-stats-link {
+  background: transparent;
+  border: 0;
+  padding: 0 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.45;
+  letter-spacing: 0.1em;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.reset-stats-link:hover { opacity: 0.75; }
+
+/* Win banner */
+.banner {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2deg);
+  background: #fff8c8;
+  padding: 6px 14px 8px;
+  font-family: 'Caveat', cursive;
+  font-size: 22px;
+  line-height: 1;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .4s ease;
+  white-space: nowrap;
+}
+.banner.show { opacity: 1; }
 
 /* Tweaks toggle button */
 .tweaks-toggle {
@@ -255,26 +487,6 @@ body {
 .tw-slider { width: 100%; }
 .tw-val { font-size: 10px; opacity: 0.6; margin-left: 6px; }
 
-/* Win banner */
-.banner {
-  position: absolute;
-  top: -14px;
-  left: 50%;
-  transform: translateX(-50%) rotate(-2deg);
-  background: #fff8c8;
-  padding: 6px 14px 8px;
-  font-family: 'Caveat', cursive;
-  font-size: 22px;
-  line-height: 1;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
-  z-index: 5;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity .4s ease;
-  white-space: nowrap;
-}
-.banner.show { opacity: 1; }
-
 @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .app { animation: fadeIn .5s ease; }
 
@@ -282,40 +494,12 @@ body {
   .app, .banner { animation: none; transition: none; }
 }
 
-/* ── Mode buttons (used inside .board-mode-selector) ────────────── */
-.mode-sep {
-  font-size: 20px;
-  line-height: 1;
-  pointer-events: none;
-  user-select: none;
-  font-family: 'Caveat', cursive;
+/* ── Pattern recognition styles ─────────────────────────────────── */
+
+@keyframes patternFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
-.mode-btn {
-  background: transparent;
-  border: 0;
-  padding: 4px 0;
-  font-family: 'Caveat', cursive;
-  font-size: 22px;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.45;
-  line-height: 1;
-  position: relative;
-}
-.mode-btn--active {
-  opacity: 1;
-}
-.mode-btn--active::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 2px;
-  background: currentColor;
-  border-radius: 2px;
-  opacity: 0.55;
-}
-.mode-btn:hover { opacity: 0.85; }
-.mode-btn--active:hover { opacity: 1; }
 
 /* ── Mobile ──────────────────────────────────────────────────────── */
 @media (max-width: 600px) {
@@ -329,179 +513,21 @@ body {
     box-shadow: none;
   }
   .page::before { display: none; }
+  .page::after { display: none; }
   .page-inner {
     padding: 8px 8px 16px;
     gap: 12px;
   }
+  .topbar { padding-bottom: 12px; gap: 10px; }
+  .wordmark { font-size: 28px; }
+  .wordmark-sub { display: none; }
+  .mode-pill-btn { font-size: 15px; padding: 3px 10px 4px; }
 
-  /* Compact board header on small screens */
-  .board-header {
-    flex-wrap: wrap;
-    padding-bottom: 8px;
-    gap: 6px;
-  }
-  .board-title { font-size: 26px; }
-  .mode-btn { font-size: 18px; }
-  .board-header-right { gap: 12px; }
-  .turn-compact-text { font-size: 15px; }
-  .score-compact { gap: 12px; }
-  .score-compact-item .sc-n { font-size: 15px; }
+  .footer { gap: 12px; padding-top: 10px; }
+  .footer-meta { display: none; }
 
-  /* Compact board footer */
-  .board-footer { gap: 4px; padding-top: 8px; }
-  .footer-diff { font-size: 15px; padding: 2px 6px; }
-  .footer-action-btn { font-size: 15px; }
-  .footer-note { display: none; }
-
-  /* Sidebar stats compact */
-  .margin { gap: 0; }
-  .note-block { padding: 10px 0; }
-  .note-block--first { padding-top: 0; }
-  .shape-stats { gap: 5px 10px; }
-  .shape-label { font-size: 10px; }
-  .shape-val { font-size: 15px; }
+  .rail { gap: 0; }
+  .rail-section { padding: 10px 0; }
+  .turn-text { font-size: 22px; }
+  .score-cell .n { font-size: 26px; }
 }
-
-/* ── Pattern recognition styles ─────────────────────────────────── */
-
-@keyframes patternFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* Shape counters table */
-.shape-stats {
-  margin-top: 8px;
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  gap: 8px 14px;
-  align-items: baseline;
-}
-.shape-row--header .shape-col-head {
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  opacity: 0.55;
-  text-align: right;
-}
-.shape-row {
-  display: contents;
-  font-size: 11px;
-}
-.shape-label {
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  opacity: 0.58;
-}
-.shape-val {
-  font-size: 21px;
-  font-weight: 600;
-  text-align: right;
-  font-family: 'Caveat', cursive;
-}
-
-/* This-game/avg line */
-.this-game-line {
-  margin-top: 14px;
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  opacity: 0.60;
-}
-
-/* Show patterns toggle */
-.patterns-toggle-row {
-  margin-top: 20px;
-}
-.patterns-toggle {
-  font-family: 'Caveat', cursive;
-  font-size: 19px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  color: inherit;
-  padding: 0;
-  line-height: 1;
-  opacity: 0.85;
-  position: relative;
-}
-.patterns-toggle .toggle-state {
-  font-weight: 700;
-}
-.patterns-toggle.on::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: -2px;
-  height: 1.5px;
-  background: currentColor;
-  border-radius: 2px;
-  opacity: 0.45;
-}
-.patterns-toggle:hover { opacity: 1; }
-
-/* What gets recognized? link */
-.reference-toggle {
-  display: block;
-  margin-top: 12px;
-  background: transparent;
-  border: 0;
-  padding: 0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.55;
-  text-align: left;
-  text-transform: lowercase;
-}
-.reference-toggle:hover { opacity: 0.9; }
-
-/* Inline pattern reference */
-.pattern-reference {
-  margin-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  border-top: 1px dashed rgba(0,0,0,0.1);
-  padding-top: 8px;
-}
-.ref-entry {}
-.ref-name {
-  font-size: 10px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  font-weight: 600;
-  opacity: 0.85;
-  margin-bottom: 2px;
-}
-.ref-desc {
-  font-size: 9px;
-  letter-spacing: 0.04em;
-  opacity: 0.6;
-  line-height: 1.5;
-  margin-bottom: 3px;
-}
-.ref-diagram {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  opacity: 0.7;
-  letter-spacing: 0.08em;
-}
-
-/* Reset stats link */
-.reset-stats-link {
-  background: transparent;
-  border: 0;
-  padding: 0;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.45;
-  letter-spacing: 0.1em;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.reset-stats-link:hover { opacity: 0.75; }
