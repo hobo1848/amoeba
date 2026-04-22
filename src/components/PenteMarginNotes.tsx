@@ -48,7 +48,7 @@ export function PenteMarginNotes({
   gameOpenThreesX,
 }: Props) {
   const { openThrees, fours, forks, blocked, gamesPlayed, sessionWins, xOpenThreesHistory } = sessionStats;
-  const [patternsOpen, setPatternsOpen] = useState(false);
+  const [patternsOpen, setPatternsOpen] = useState(true);
 
   const avgOT = xOpenThreesHistory.length > 0
     ? (xOpenThreesHistory.reduce((a, b) => a + b, 0) / xOpenThreesHistory.length).toFixed(1)
