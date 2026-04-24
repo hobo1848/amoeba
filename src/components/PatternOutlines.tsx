@@ -67,33 +67,19 @@ export function PatternOutlines({ shapes, forkShapeKeys, blockedAnim, cellPx, pa
       const cy = pad + offsetY + blockedAnim.row * cellPx + cellPx / 2;
       const slashHalf = cellPx * 0.28;
       const color = blockedAnim.player === 'X' ? theme.x : theme.o;
-
-      if (variant === 'A' && blockedAnim.player === 'O') {
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        el.setAttribute('x1', String(cx - slashHalf));
-        el.setAttribute('y1', String(cy + slashHalf));
-        el.setAttribute('x2', String(cx + slashHalf));
-        el.setAttribute('y2', String(cy - slashHalf));
-        el.setAttribute('stroke', color);
-        el.setAttribute('stroke-width', '1.2');
-        el.setAttribute('stroke-dasharray', '3 2');
-        el.setAttribute('stroke-linecap', 'round');
-        el.setAttribute('opacity', String(blockedAnim.opacity));
-        el.style.transition = 'opacity 1500ms ease';
-        g.appendChild(el);
-      } else {
-        const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        el.setAttribute('x1', String(cx - slashHalf));
-        el.setAttribute('y1', String(cy + slashHalf));
-        el.setAttribute('x2', String(cx + slashHalf));
-        el.setAttribute('y2', String(cy - slashHalf));
-        el.setAttribute('stroke', color);
-        el.setAttribute('stroke-width', '1.2');
-        el.setAttribute('stroke-linecap', 'round');
-        el.setAttribute('opacity', String(blockedAnim.opacity));
-        el.style.transition = 'opacity 1500ms ease';
-        g.appendChild(el);
-      }
+      const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      el.setAttribute('x1', String(cx - slashHalf));
+      el.setAttribute('y1', String(cy + slashHalf));
+      el.setAttribute('x2', String(cx + slashHalf));
+      el.setAttribute('y2', String(cy - slashHalf));
+      el.setAttribute('stroke', color);
+      el.setAttribute('stroke-width', '1.2');
+      el.setAttribute('stroke-linecap', 'round');
+      el.setAttribute('opacity', String(blockedAnim.opacity));
+      // Dashed for O in variant A (mirrors the dashed outline used for O shapes).
+      if (variant === 'A' && blockedAnim.player === 'O') el.setAttribute('stroke-dasharray', '3 2');
+      el.style.transition = 'opacity 1500ms ease';
+      g.appendChild(el);
     }
   }, [shapes, forkShapeKeys, blockedAnim, cellPx, pad, offsetX, offsetY, theme, variant]);
 

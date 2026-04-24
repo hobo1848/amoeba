@@ -127,7 +127,8 @@ export interface PatternStatsReturn {
 export function usePatternStats({ history, board, gridSize, winPlayer: _winPlayer }: UsePatternStatsOpts): PatternStatsReturn {
   const [sessionStats, setSessionStats] = useState<SessionStats>(loadStats);
   const [settings, setSettings] = useState<PatternSettings>(loadSettings);
-  const outlineVariant = getOutlineVariant();
+  // Read once on mount — this is a dev-only toggle, runtime changes aren't needed.
+  const [outlineVariant] = useState<OutlineVariant>(getOutlineVariant);
 
   // Parallel move record history (synced to game history by length).
   const moveRecordsRef = useRef<MoveRecord[]>([]);
@@ -210,9 +211,7 @@ export function usePatternStats({ history, board, gridSize, winPlayer: _winPlaye
     setSessionStats(prev => {
       const sw = { ...prev.sessionWins, [player]: prev.sessionWins[player] + 1 };
       const gamesPlayed = prev.gamesPlayed + 1;
-      const xOpenThreesHistory = player === 'X' || true
-        ? [...prev.xOpenThreesHistory, gameOpenThreesX]
-        : [...prev.xOpenThreesHistory, gameOpenThreesX];
+      const xOpenThreesHistory = [...prev.xOpenThreesHistory, gameOpenThreesX];
       return { ...prev, sessionWins: sw, gamesPlayed, xOpenThreesHistory };
     });
   }, [gameOpenThreesX]);

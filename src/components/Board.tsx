@@ -57,57 +57,43 @@ export function Board({
   const pad = isMobile ? 14 : BOARD.pad;
   const boardPx = cellPx * gridSize;
   const framePx = cellPx * effectiveFrame;
-  // Offset to center the inner grid inside the outer frame
-  const boardOffsetX = Math.floor((framePx - boardPx) / 2);
-  const boardOffsetY = Math.floor((framePx - boardPx) / 2);
+  // Offset to center the inner grid inside the outer frame (same for X and Y).
+  const boardOffset = Math.floor((framePx - boardPx) / 2);
   const coordsSpace = showCoords ? 22 : 0;
   const viewW = framePx + pad * 2 + coordsSpace;
   const viewH = framePx + pad * 2 + coordsSpace;
 
-  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX; pt.y = e.clientY;
-    const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
-    const x = local.x - pad - boardOffsetX, y = local.y - pad - boardOffsetY;
-    if (x < 0 || y < 0 || x > boardPx || y > boardPx) return;
-    const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
-    if (row >= 0 && col >= 0 && row < gridSize && col < gridSize) onCellClick(row, col);
-  };
-
-  const svgCoordsFromTouch = (touch: { clientX: number; clientY: number }) => {
+  // Unified SVG → grid-cell conversion used by all pointer handlers.
+  const svgToCell = (clientX: number, clientY: number): { row: number; col: number } | null => {
     const svg = svgRef.current;
     if (!svg) return null;
     const pt = svg.createSVGPoint();
-    pt.x = touch.clientX; pt.y = touch.clientY;
+    pt.x = clientX; pt.y = clientY;
     const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
-    const x = local.x - pad - boardOffsetX, y = local.y - pad - boardOffsetY;
-    if (x < 0 || y < 0 || x > boardPx || y > boardPx) return null;
-    const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
+    const x = local.x - pad - boardOffset;
+    const y = local.y - pad - boardOffset;
+    if (x < 0 || y < 0 || x >= boardPx || y >= boardPx) return null;
+    const col = Math.floor(x / cellPx);
+    const row = Math.floor(y / cellPx);
     if (row < 0 || col < 0 || row >= gridSize || col >= gridSize) return null;
     return { row, col };
   };
 
-  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
-    const pos = svgCoordsFromTouch(e.touches[0]);
-    onHover(pos);
+  const handleClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    const pos = svgToCell(e.clientX, e.clientY);
+    if (pos) onCellClick(pos.row, pos.col);
   };
 
   const handleMove = (e: React.MouseEvent<SVGSVGElement>) => {
-    const svg = svgRef.current;
-    if (!svg) return;
-    const pt = svg.createSVGPoint();
-    pt.x = e.clientX; pt.y = e.clientY;
-    const local = pt.matrixTransform(svg.getScreenCTM()!.inverse());
-    const x = local.x - pad - boardOffsetX, y = local.y - pad - boardOffsetY;
-    if (x < 0 || y < 0 || x > boardPx || y > boardPx) { onHover(null); return; }
-    const col = Math.floor(x / cellPx), row = Math.floor(y / cellPx);
-    onHover({ row, col });
+    onHover(svgToCell(e.clientX, e.clientY));
   };
 
-  const hoverX = hovered ? pad + boardOffsetX + hovered.col * cellPx + cellPx / 2 : 0;
-  const hoverY = hovered ? pad + boardOffsetY + hovered.row * cellPx + cellPx / 2 : 0;
+  const handleTouchStart = (e: React.TouchEvent<SVGSVGElement>) => {
+    onHover(svgToCell(e.touches[0].clientX, e.touches[0].clientY));
+  };
+
+  const hoverX = hovered ? pad + boardOffset + hovered.col * cellPx + cellPx / 2 : 0;
+  const hoverY = hovered ? pad + boardOffset + hovered.row * cellPx + cellPx / 2 : 0;
   const canPlace = hovered &&
     hovered.row < state.board.length &&
     !state.board[hovered.row][hovered.col] &&
@@ -133,12 +119,12 @@ export function Board({
       {showCoords && (
         <g fontFamily="JetBrains Mono, monospace" fontSize="9" fill={theme.muted}>
           {Array.from({ length: gridSize }).map((_, i) => (
-            <text key={`cx${i}`} x={pad + boardOffsetX + i * cellPx + cellPx / 2} y={pad + boardOffsetY - 10} textAnchor="middle">
+            <text key={`cx${i}`} x={pad + boardOffset + i * cellPx + cellPx / 2} y={pad + boardOffset - 10} textAnchor="middle">
               {String.fromCharCode(65 + i)}
             </text>
           ))}
           {Array.from({ length: gridSize }).map((_, i) => (
-            <text key={`cy${i}`} x={pad + boardOffsetX - 10} y={pad + boardOffsetY + i * cellPx + cellPx / 2 + 3} textAnchor="middle">
+            <text key={`cy${i}`} x={pad + boardOffset - 10} y={pad + boardOffset + i * cellPx + cellPx / 2 + 3} textAnchor="middle">
               {i + 1}
             </text>
           ))}
@@ -151,8 +137,8 @@ export function Board({
         cellPx={cellPx}
         boardPx={boardPx}
         pad={pad}
-        offsetX={boardOffsetX}
-        offsetY={boardOffsetY}
+        offsetX={boardOffset}
+        offsetY={boardOffset}
         svgEl={svgRef.current}
       />
 
@@ -168,8 +154,8 @@ export function Board({
         boardRow.map((cell, col) => {
           const player = cell as Player | null;
           if (!player) return null;
-          const cx = pad + boardOffsetX + col * cellPx + cellPx / 2;
-          const cy = pad + boardOffsetY + row * cellPx + cellPx / 2;
+          const cx = pad + boardOffset + col * cellPx + cellPx / 2;
+          const cy = pad + boardOffset + row * cellPx + cellPx / 2;
           const isNew = !!(state.lastMove && state.lastMove.row === row && state.lastMove.col === col);
           return (
             <Mark
@@ -195,15 +181,15 @@ export function Board({
           blockedAnim={blockedAnim}
           cellPx={cellPx}
           pad={pad}
-          offsetX={boardOffsetX}
-          offsetY={boardOffsetY}
+          offsetX={boardOffset}
+          offsetY={boardOffset}
           theme={theme}
           variant={outlineVariant}
         />
       )}
 
       {state.win && (
-        <WinDecoration win={state.win} theme={theme} cellPx={cellPx} pad={pad} offsetX={boardOffsetX} offsetY={boardOffsetY} />
+        <WinDecoration win={state.win} theme={theme} cellPx={cellPx} pad={pad} offsetX={boardOffset} offsetY={boardOffset} />
       )}
     </svg>
   );
