@@ -28,7 +28,7 @@ function gameReducer(state: GameState, action: Action): GameState {
       if (state.win || state.board[row][col]) return state;
 
       // Copy each row before editing so React receives a fresh board object.
-      const board = state.board.map(row => row.slice());
+      const board = state.board.map(r => r.slice());
       board[row][col] = player;
       const win = checkWinAt(board, row, col);
       return {

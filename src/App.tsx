@@ -155,18 +155,15 @@ export function App() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, penteState.turn, penteState.win, penteState.board, difficulty]);
 
-  const penteThreats = useMemo(() => ({
-    X: countThreats(penteState.board, 'X').count,
-    O: countThreats(penteState.board, 'O').count,
+  const penteThreatData = useMemo(() => ({
+    X: countThreats(penteState.board, 'X'),
+    O: countThreats(penteState.board, 'O'),
   }), [penteState.board]);
 
   const penteVuln = useMemo(() => ({
     pairsX: findVulnerablePairs(penteState.board, 'X'),
     pairsO: findVulnerablePairs(penteState.board, 'O'),
   }), [penteState.board]);
-
-  const penteThreatsX = useMemo(() => countThreats(penteState.board, 'X').cells, [penteState.board]);
-  const penteThreatsO = useMemo(() => countThreats(penteState.board, 'O').cells, [penteState.board]);
 
   const penteBoardState = useMemo((): GameState => ({
     board: penteState.board,
@@ -234,7 +231,7 @@ export function App() {
                 <WinBanner win={state.win} theme={theme} />
                 <Board
                   theme={theme}
-                  gridSize={gridSize as number}
+                  gridSize={gridSize}
                   roughness01={roughness01}
                   showTexture={tweaks.paperTexture}
                   showCoords={tweaks.showCoords}
@@ -271,8 +268,8 @@ export function App() {
                   overlayContent={(pad) => (
                     <CaptureOverlay
                       vulnPairs={[...penteVuln.pairsX, ...penteVuln.pairsO]}
-                      threatCellsX={penteThreatsX}
-                      threatCellsO={penteThreatsO}
+                      threatCellsX={penteThreatData.X.cells}
+                      threatCellsO={penteThreatData.O.cells}
                       cellPx={penteCellPx}
                       pad={pad}
                       theme={theme}
@@ -349,8 +346,8 @@ export function App() {
               penteState={penteState}
               sessionStats={penteSessionStats}
               settings={penteSettings}
-              threatsX={penteThreats.X}
-              threatsO={penteThreats.O}
+              threatsX={penteThreatData.X.count}
+              threatsO={penteThreatData.O.count}
               vulnX={penteVuln.pairsX.length}
               vulnO={penteVuln.pairsO.length}
               gameOpenThreesX={penteGameOpenThreesX}

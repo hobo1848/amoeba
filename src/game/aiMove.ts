@@ -1,21 +1,12 @@
 import type { Difficulty } from '../tokens';
 import { checkWinAt, type Board, type Player } from './checkWin';
-
-type Move = [row: number, col: number];
+import { type AiMove, type DifficultyProfile, DIFFICULTY_PROFILES, candidateMoves, scoreLineForPlayer } from './aiUtils';
 
 interface AiMoveOptions {
   aiPlayer: Player;
   humanPlayer: Player;
   difficulty: Difficulty;
   rng?: () => number;
-}
-
-interface DifficultyProfile {
-  defenseWeight: number;
-  randomJitter: number;
-  mistakeChance: number;
-  candidatePoolSize: number;
-  blockImmediateWinChance: number;
 }
 
 interface ScoredCandidate {
@@ -26,123 +17,13 @@ interface ScoredCandidate {
   moveScore: number;
 }
 
-const AI_DIFFICULTY: Record<Difficulty, DifficultyProfile> = {
-  easy: {
-    defenseWeight: 0.75,
-    randomJitter: 22,
-    mistakeChance: 0.38,
-    candidatePoolSize: 4,
-    blockImmediateWinChance: 0.55,
-  },
-  medium: {
-    defenseWeight: 0.9,
-    randomJitter: 5,
-    mistakeChance: 0.15,
-    candidatePoolSize: 3,
-    blockImmediateWinChance: 0.85,
-  },
-  hard: {
-    defenseWeight: 1,
-    randomJitter: 0.25,
-    mistakeChance: 0,
-    candidatePoolSize: 1,
-    blockImmediateWinChance: 1,
-  },
-};
-
-function scoreCellForPlayer(board: Board, row: number, col: number, player: Player): number {
-  const boardSize = board.length;
-  const directions: [rowStep: number, colStep: number][] = [[0,1],[1,0],[1,1],[1,-1]];
-  let score = 0;
-
-  for (const [rowStep, colStep] of directions) {
-    let connectedStones = 1;
-    let openForwardEnd = false;
-    let openBackwardEnd = false;
-
-    // Pretend the candidate cell contains `player`, then count contiguous
-    // stones outward in both directions along this axis.
-    for (let distance = 1; distance < 5; distance++) {
-      const nextRow = row + rowStep * distance;
-      const nextCol = col + colStep * distance;
-      if (nextRow < 0 || nextCol < 0 || nextRow >= boardSize || nextCol >= boardSize) break;
-      if (board[nextRow][nextCol] === player) {
-        connectedStones++;
-      } else {
-        if (board[nextRow][nextCol] === null) openForwardEnd = true;
-        break;
-      }
-    }
-
-    for (let distance = 1; distance < 5; distance++) {
-      const nextRow = row - rowStep * distance;
-      const nextCol = col - colStep * distance;
-      if (nextRow < 0 || nextCol < 0 || nextRow >= boardSize || nextCol >= boardSize) break;
-      if (board[nextRow][nextCol] === player) {
-        connectedStones++;
-      } else {
-        if (board[nextRow][nextCol] === null) openBackwardEnd = true;
-        break;
-      }
-    }
-
-    const openEnds = (openForwardEnd ? 1 : 0) + (openBackwardEnd ? 1 : 0);
-    if (connectedStones >= 5)                          score += 100000;
-    else if (connectedStones === 4 && openEnds === 2)  score += 10000;
-    else if (connectedStones === 4 && openEnds === 1)  score += 1000;
-    else if (connectedStones === 3 && openEnds === 2)  score += 500;
-    else if (connectedStones === 3 && openEnds === 1)  score += 80;
-    else if (connectedStones === 2 && openEnds === 2)  score += 40;
-    else if (connectedStones === 2 && openEnds === 1)  score += 8;
-    else                                                score += 1;
-  }
-  return score;
-}
-
-function candidateMoves(board: Board): Move[] {
-  const boardSize = board.length;
-  const occupiedCells: Move[] = [];
-  for (let row = 0; row < boardSize; row++)
-    for (let col = 0; col < boardSize; col++)
-      if (board[row][col]) occupiedCells.push([row, col]);
-
-  if (!occupiedCells.length) return [[Math.floor(boardSize / 2), Math.floor(boardSize / 2)]];
-
-  // Nearby empty cells are the only useful candidates in normal Gomoku play.
-  // The packed numeric key lets the Set deduplicate cells from overlapping
-  // 5x5 neighborhoods without allocating `{ row, col }` objects.
-  const candidateCells = new Set<number>();
-  for (const [row, col] of occupiedCells) {
-    for (let rowOffset = -2; rowOffset <= 2; rowOffset++) {
-      for (let colOffset = -2; colOffset <= 2; colOffset++) {
-        const candidateRow = row + rowOffset;
-        const candidateCol = col + colOffset;
-        if (
-          candidateRow >= 0 &&
-          candidateCol >= 0 &&
-          candidateRow < boardSize &&
-          candidateCol < boardSize &&
-          !board[candidateRow][candidateCol]
-        ) {
-          candidateCells.add(candidateRow * boardSize + candidateCol);
-        }
-      }
-    }
-  }
-
-  return Array.from(candidateCells, key => [
-    Math.floor(key / boardSize),
-    key % boardSize,
-  ] as Move);
-}
-
 function wouldWin(board: Board, row: number, col: number, player: Player): boolean {
   const boardWithMove = board.map(boardRow => boardRow.slice());
   boardWithMove[row][col] = player;
   return checkWinAt(boardWithMove, row, col)?.player === player;
 }
 
-function immediateWinningMoves(board: Board, candidates: Move[], player: Player): Move[] {
+function immediateWinningMoves(board: Board, candidates: AiMove[], player: Player): AiMove[] {
   return candidates.filter(([row, col]) => wouldWin(board, row, col, player));
 }
 
@@ -162,7 +43,7 @@ function chooseFromProfile(
   candidates: ScoredCandidate[],
   profile: DifficultyProfile,
   rng: () => number,
-): Move {
+): AiMove {
   const poolSize = Math.min(profile.candidatePoolSize, candidates.length);
   const shouldPickBest = poolSize <= 1 || rng() >= profile.mistakeChance;
   if (shouldPickBest) return [candidates[0].row, candidates[0].col];
@@ -173,14 +54,14 @@ function chooseFromProfile(
   return [chosen.row, chosen.col];
 }
 
-export function aiMove(board: Board, options: AiMoveOptions): Move {
+export function aiMove(board: Board, options: AiMoveOptions): AiMove {
   const {
     aiPlayer,
     humanPlayer,
     difficulty,
     rng = Math.random,
   } = options;
-  const profile = AI_DIFFICULTY[difficulty];
+  const profile = DIFFICULTY_PROFILES[difficulty];
   const candidates = candidateMoves(board);
   if (!candidates.length) return [Math.floor(board.length / 2), Math.floor(board.length / 2)];
 
@@ -191,8 +72,8 @@ export function aiMove(board: Board, options: AiMoveOptions): Move {
   if (humanWins.length && rng() < profile.blockImmediateWinChance) return humanWins[0];
 
   const scoredCandidates = candidates.map(([row, col]): ScoredCandidate => {
-    const attackScore = scoreCellForPlayer(board, row, col, aiPlayer);
-    const blockScore = scoreCellForPlayer(board, row, col, humanPlayer) * profile.defenseWeight;
+    const attackScore = scoreLineForPlayer(board, row, col, aiPlayer);
+    const blockScore = scoreLineForPlayer(board, row, col, humanPlayer) * profile.defenseWeight;
     const moveScore = Math.max(
       attackScore,
       blockScore,
